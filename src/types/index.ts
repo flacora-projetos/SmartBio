@@ -47,6 +47,16 @@ export type Offer = {
   isActive: boolean;
   order: number;
   createdAt: string;
+  // Novos campos para estruturação de ofertas (Etapa 4.3)
+  objective?: string;
+  targetPain?: string;
+  idealAudience?: string;
+  maturityLevel?: string;
+  format?: 'consultoria' | 'mentoria' | 'produto_digital' | 'servico' | 'agenda' | 'diagnostico' | 'comunidade' | 'outro' | string;
+  recommendedCta?: 'whatsapp' | 'agenda' | 'formulario' | 'checkout' | string;
+  ctaDestination?: string;
+  status?: 'active' | 'draft' | 'paused';
+  isConnectedToRule?: boolean;
 };
 
 export type QuizQuestion = {
