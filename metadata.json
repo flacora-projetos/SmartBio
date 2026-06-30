@@ -1,0 +1,6 @@
+{
+  "name": "SmartBio",
+  "description": "Multi-tenant SaaS application for AI-powered smart bios.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
