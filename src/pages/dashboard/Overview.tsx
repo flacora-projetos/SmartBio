@@ -4,7 +4,8 @@ import {
   mockCreationFlowSteps, 
   mockDashboardMetrics,
   mockSubscription,
-  dashboardData
+  dashboardData,
+  mockTenant
 } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { SmartBioPhoneMock } from '@/components/landing/SmartBioPhoneMock';
@@ -148,7 +149,7 @@ export function Overview() {
               {mockSmartBio.status === 'published' ? (
                 <div className="space-y-3">
                   <div className="bg-background border border-border px-3 py-2 rounded-lg text-sm text-ink truncate font-mono">
-                    smartbio.app/s/awesome-brand
+                    smartbio.app/s/{mockTenant.slug}
                   </div>
                   <div className="flex gap-2">
                     <Button className="flex-1 bg-ink text-surface hover:bg-ink/90 rounded-lg text-xs" size="sm">

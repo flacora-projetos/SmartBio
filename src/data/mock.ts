@@ -75,7 +75,7 @@ export const landingData = {
       id: "plan_essential",
       name: "Essencial",
       description: "Perfeito para criadores começando",
-      price: "[PRICE_ESSENTIAL]",
+      priceLabel: "[PRICE_ESSENTIAL]",
       currency: "R$",
       features: ["SmartBio publicada em slug", "Perfil público e links sociais", "CTA principal", "Leads básicos", "Analytics básico"]
     },
@@ -83,7 +83,7 @@ export const landingData = {
       id: "plan_intelligent",
       name: "Inteligente",
       description: "Para negócios em crescimento",
-      price: "[PRICE_INTELLIGENT]",
+      priceLabel: "[PRICE_INTELLIGENT]",
       currency: "R$",
       features: ["Tudo do Essencial", "Onboarding assistido por IA", "Quiz de diagnóstico", "Recomendação por regras", "Preview antes da publicação", "Leads qualificados"]
     },
@@ -91,7 +91,7 @@ export const landingData = {
       id: "plan_premium",
       name: "Premium",
       description: "Para agências e grandes marcas",
-      price: "[PRICE_PREMIUM]",
+      priceLabel: "[PRICE_PREMIUM]",
       currency: "R$",
       features: ["Tudo do Inteligente", "Agenda ou integração", "Analytics de funil", "CRM leve", "Suporte prioritário", "Templates e módulos avançados"]
     }
@@ -142,40 +142,49 @@ export const landingData = {
 
 export const mockUser: User = {
   id: 'usr_01',
-  email: 'admin@smartbio.io',
-  fullName: 'Admin User',
-  avatarUrl: 'https://i.pravatar.cc/150?u=admin@smartbio.io',
+  email: 'usuario@smartbio.app',
+  fullName: '[NOME_USUARIO]',
+  avatarUrl: 'https://i.pravatar.cc/150?u=usuario@smartbio.app',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
 };
 
 export const mockPlans: Plan[] = [
   {
-    id: 'plan_starter',
-    name: 'Starter',
-    description: 'Perfect for creators starting out',
-    price: 9,
-    currency: 'USD',
-    features: ['1 SmartBio', 'Basic Analytics', 'Standard Support'],
-    stripePriceId: 'price_starter_test',
+    id: 'plan_essential',
+    name: 'Essencial',
+    description: 'Perfeito para criadores começando',
+    priceLabel: '[PRICE_ESSENTIAL]',
+    currency: 'BRL',
+    features: ['SmartBio publicada em slug', 'Perfil público e links sociais', 'CTA principal', 'Leads básicos', 'Analytics básico'],
+    stripePriceId: 'price_essential_test',
   },
   {
-    id: 'plan_pro',
-    name: 'Pro',
-    description: 'For growing businesses and agencies',
-    price: 29,
-    currency: 'USD',
-    features: ['Unlimited SmartBios', 'Advanced AI Onboarding', 'Priority Support', 'Custom Domains'],
-    stripePriceId: 'price_pro_test',
+    id: 'plan_intelligent',
+    name: 'Inteligente',
+    description: 'Para negócios em crescimento',
+    priceLabel: '[PRICE_INTELLIGENT]',
+    currency: 'BRL',
+    features: ['Tudo do Essencial', 'Onboarding assistido por IA', 'Quiz de diagnóstico', 'Recomendação por regras', 'Preview antes da publicação', 'Leads qualificados'],
+    stripePriceId: 'price_intelligent_test',
   },
+  {
+    id: 'plan_premium',
+    name: 'Premium',
+    description: 'Para agências e grandes marcas',
+    priceLabel: '[PRICE_PREMIUM]',
+    currency: 'BRL',
+    features: ['Tudo do Inteligente', 'Agenda ou integração', 'Analytics de funil', 'CRM leve', 'Suporte prioritário', 'Templates e módulos avançados'],
+    stripePriceId: 'price_premium_test',
+  }
 ];
 
 export const mockTenant: Tenant = {
   id: 'tnt_01',
   userId: 'usr_01',
-  name: 'My Awesome Brand',
-  slug: 'awesome-brand',
-  planId: 'plan_pro',
+  name: '[NOME_DA_MARCA]',
+  slug: 'minha-smartbio',
+  planId: 'plan_intelligent',
   isActive: true,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -184,8 +193,8 @@ export const mockTenant: Tenant = {
 export const mockSmartBio: SmartBio = {
   id: 'bio_01',
   tenantId: 'tnt_01',
-  title: 'Awesome Brand Official Links',
-  bio: 'Welcome to our official link page. Discover our products and services!',
+  title: '[TITULO_DA_SMARTBIO]',
+  bio: '[BIO_CURTA_GERADA_PELA_IA]',
   theme: 'light',
   status: 'preview_pending_approval',
   isPublished: false,
@@ -303,9 +312,9 @@ export const mockOffers: Offer[] = [
   {
     id: 'off_01',
     tenantId: 'tnt_01',
-    title: 'Book a Consultation',
-    description: '1-on-1 Strategy Session',
-    url: 'https://cal.com/awesome-brand',
+    title: '[OFERTA_PRINCIPAL]',
+    description: '[DESCRIÇÃO_DA_OFERTA_PRINCIPAL]',
+    url: 'https://cal.com/minha-smartbio',
     price: 150,
     isActive: true,
     order: 1,
@@ -314,9 +323,9 @@ export const mockOffers: Offer[] = [
   {
     id: 'off_02',
     tenantId: 'tnt_01',
-    title: 'Download Ultimate Guide',
-    description: 'Free PDF Guide to scale your brand',
-    url: 'https://awesome-brand.com/guide',
+    title: '[OFERTA_DE_ENTRADA]',
+    description: '[DESCRIÇÃO_DA_OFERTA_DE_ENTRADA]',
+    url: 'https://minha-smartbio.com/entrada',
     price: 0,
     isActive: true,
     order: 2,

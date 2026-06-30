@@ -31,7 +31,7 @@ export function PricingCards() {
                   <p className={`text-sm ${isPopular ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>{plan.description}</p>
                 </div>
                 <div className="mb-8">
-                  <span className="text-4xl font-bold">{plan.currency}{plan.price}</span>
+                  <span className="text-4xl font-bold">{plan.currency} {plan.priceLabel}</span>
                   <span className={`text-sm ${isPopular ? 'text-primary-foreground/80' : 'text-muted-foreground'}`}>/mês</span>
                 </div>
                 <ul className="space-y-4 mb-8 flex-1">

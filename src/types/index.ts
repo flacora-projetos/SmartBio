@@ -82,7 +82,7 @@ export type Plan = {
   id: string;
   name: string;
   description: string;
-  price: number;
+  priceLabel: string;
   currency: string;
   features: string[];
   stripePriceId: string;
