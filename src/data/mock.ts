@@ -1,4 +1,4 @@
-import { Plan, User, Tenant, SmartBio, Offer } from '../types';
+import { Plan, User, Tenant, SmartBio, Offer, AiSuggestion, QuizQuestion, PreviewChecklistItem, PublishState, PublicSmartBioData } from '../types';
 
 export const landingData = {
   hero: {
@@ -332,3 +332,128 @@ export const mockOffers: Offer[] = [
     createdAt: new Date().toISOString(),
   },
 ];
+
+export const mockOnboardingSteps = [
+  {
+    id: 'step_identity',
+    title: 'Identidade',
+    description: 'Preencha as informações principais da sua marca.',
+    type: 'identity'
+  },
+  {
+    id: 'step_objective',
+    title: 'Objetivo',
+    description: 'Qual é o seu principal objetivo com a SmartBio?',
+    type: 'objective'
+  },
+  {
+    id: 'step_audience',
+    title: 'Público',
+    description: 'Quem é o seu visitante ideal?',
+    type: 'audience'
+  },
+  {
+    id: 'step_offers',
+    title: 'Ofertas',
+    description: 'As ofertas serão usadas pela SmartBio para recomendar o próximo passo certo.',
+    type: 'offers'
+  },
+  {
+    id: 'step_diagnostic',
+    title: 'Diagnóstico',
+    description: 'Defina as perguntas que vão ajudar a qualificar seus visitantes.',
+    type: 'diagnostic'
+  },
+  {
+    id: 'step_conversion',
+    title: 'Conversão',
+    description: 'Como você deseja converter seus visitantes?',
+    type: 'conversion'
+  },
+  {
+    id: 'step_style',
+    title: 'Estilo',
+    description: 'Escolha a aparência da sua SmartBio.',
+    type: 'style'
+  },
+  {
+    id: 'step_review',
+    title: 'Revisão',
+    description: 'Revise todas as informações antes de gerar o preview.',
+    type: 'review'
+  }
+];
+
+export const mockOnboardingAnswers = [
+  { stepId: 'step_1', answer: '[NICHO_DO_USUARIO]' },
+  { stepId: 'step_2', answer: '[OFERTA_PRINCIPAL_DO_USUARIO]' },
+  { stepId: 'step_3', answer: 'Captar leads qualificados' }
+];
+
+export const mockAiSuggestions: AiSuggestion[] = [
+  {
+    id: 'sug_1',
+    type: 'bio',
+    content: '[BIO_SUGERIDA_PELA_IA]',
+    isAccepted: true
+  },
+  {
+    id: 'sug_2',
+    type: 'quiz',
+    content: {
+      question: '[PERGUNTA_DE_DIAGNOSTICO_GERADA_PELA_IA]',
+      options: ['[OPCAO_A]', '[OPCAO_B]']
+    },
+    isAccepted: false
+  }
+];
+
+export const mockQuizQuestions: QuizQuestion[] = [
+  {
+    id: 'q_01',
+    tenantId: 'tnt_01',
+    question: '[PERGUNTA_1_DO_QUIZ]',
+    type: 'choice',
+    options: ['[OPCAO_1A]', '[OPCAO_1B]'],
+    order: 1,
+    isRequired: true
+  }
+];
+
+export const mockRecommendationRules = [
+  {
+    id: 'rule_01',
+    tenantId: 'tnt_01',
+    name: '[REGRA_1]',
+    condition: 'SE Resposta = [OPCAO_1A]',
+    offerId: 'off_01',
+    isActive: true
+  }
+];
+
+export const mockPreviewChecklist: PreviewChecklistItem[] = [
+  { id: 'chk_1', label: 'Textos e Bio', isComplete: true },
+  { id: 'chk_2', label: 'Ofertas configuradas', isComplete: true },
+  { id: 'chk_3', label: 'Quiz e Regras de recomendação', isComplete: false },
+];
+
+export const mockPublishState: PublishState = {
+  status: 'pending', // pending, publishing, published, failed
+  publishedAt: null,
+  publicUrl: null
+};
+
+export const mockPublicSmartBioData: PublicSmartBioData = {
+  tenantName: '[NOME_DA_MARCA]',
+  title: '[TITULO_DA_SMARTBIO]',
+  bio: '[BIO_CURTA_GERADA_PELA_IA]',
+  theme: 'light',
+  avatarUrl: 'https://i.pravatar.cc/150?u=usuario@smartbio.app',
+  socialLinks: {
+    instagram: 'https://instagram.com/[USUARIO]',
+    linkedin: 'https://linkedin.com/in/[USUARIO]'
+  },
+  offers: mockOffers,
+  quizQuestions: mockQuizQuestions
+};
+

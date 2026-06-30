@@ -1,4 +1,5 @@
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 export function LandingNavbar() {
   return (
@@ -16,12 +17,12 @@ export function LandingNavbar() {
         </nav>
 
         <div className="flex items-center gap-3">
-          <Button variant="ghost" className="hidden sm:flex rounded-full text-ink hover:bg-surface" asChild>
-            <a href="/login">Entrar</a>
-          </Button>
-          <Button className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6" asChild>
-            <a href="/signup">Começar</a>
-          </Button>
+          <a href="/login" className={cn(buttonVariants({ variant: "ghost" }), "hidden sm:flex rounded-full text-ink hover:bg-surface")}>
+            Entrar
+          </a>
+          <a href="/signup" className={cn(buttonVariants({ variant: "default" }), "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6")}>
+            Começar
+          </a>
         </div>
       </div>
     </header>

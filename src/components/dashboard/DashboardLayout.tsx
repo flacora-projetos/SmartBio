@@ -18,7 +18,6 @@ import { Link, useLocation } from 'react-router-dom';
 
 const navItems = [
   { label: 'Visão geral', path: '/app', icon: LayoutDashboard },
-  { label: 'Criar SmartBio', path: '/app/create', icon: Sparkles },
   { label: 'Onboarding IA', path: '/app/onboarding', icon: Sparkles },
   { label: 'Ofertas', path: '/app/offers', icon: List },
   { label: 'Quiz e recomendação', path: '/app/quiz', icon: HelpCircle },

@@ -7,8 +7,9 @@ import {
   dashboardData,
   mockTenant
 } from '@/data/mock';
-import { Button } from '@/components/ui/button';
-import { SmartBioPhoneMock } from '@/components/landing/SmartBioPhoneMock';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+import { SmartBioPreviewMock } from '@/components/dashboard/SmartBioPreviewMock';
 import { 
   ArrowRight, 
   CheckCircle2, 
@@ -39,9 +40,9 @@ export function Overview() {
     switch(mockSmartBio.status) {
       case 'onboarding_pending':
         return (
-          <Button className="w-full sm:w-auto bg-primary text-primary-foreground rounded-xl" asChild>
-            <Link to="/app/onboarding">{dashboardData.overview.statusCard.actions.continueOnboarding} <ArrowRight className="w-4 h-4 ml-2" /></Link>
-          </Button>
+          <Link to="/app/onboarding" className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-auto bg-primary text-primary-foreground rounded-xl")}>
+            {dashboardData.overview.statusCard.actions.continueOnboarding} <ArrowRight className="w-4 h-4 ml-2" />
+          </Link>
         );
       case 'generating':
         return (
@@ -51,9 +52,9 @@ export function Overview() {
         );
       case 'preview_pending_approval':
         return (
-          <Button className="w-full sm:w-auto bg-primary text-primary-foreground rounded-xl" asChild>
-            <Link to="/app/preview"><Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.statusCard.actions.viewPreview}</Link>
-          </Button>
+          <Link to="/app/preview" className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-auto bg-primary text-primary-foreground rounded-xl")}>
+            <Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.statusCard.actions.viewPreview}
+          </Link>
         );
       case 'published':
         return (
@@ -177,17 +178,17 @@ export function Overview() {
               
               <div className="relative mx-auto" style={{ maxWidth: '280px' }}>
                  <div className="transform scale-[0.8] origin-top">
-                    <SmartBioPhoneMock />
+                    <SmartBioPreviewMock />
                  </div>
               </div>
               
-              <div className="mt-[-80px] space-y-2 relative z-10">
-                <Button className="w-full bg-primary text-primary-foreground rounded-xl" asChild>
-                  <Link to="/app/preview"><Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.previewCard.viewFull}</Link>
-                </Button>
-                <Button variant="outline" className="w-full rounded-xl" asChild>
-                  <Link to="/app/onboarding">{dashboardData.overview.previewCard.continueConfig}</Link>
-                </Button>
+              <div className="mt-[-80px] space-y-2 relative z-10 flex flex-col">
+                <Link to="/app/preview" className={cn(buttonVariants({ variant: "default" }), "w-full bg-primary text-primary-foreground rounded-xl")}>
+                  <Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.previewCard.viewFull}
+                </Link>
+                <Link to="/app/onboarding" className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-xl")}>
+                  {dashboardData.overview.previewCard.continueConfig}
+                </Link>
               </div>
             </div>
 

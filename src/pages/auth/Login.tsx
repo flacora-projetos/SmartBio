@@ -1,5 +1,6 @@
 import { AuthLayout } from '@/components/auth/AuthLayout';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { dashboardData } from '@/data/mock';
 
@@ -32,9 +33,9 @@ export function Login() {
             {dashboardData.auth.login.forgotPasswordLink}
           </Link>
         </div>
-        <Button className="w-full bg-ink text-surface hover:bg-ink/90 rounded-xl" asChild>
-          <Link to="/app">{dashboardData.auth.login.submitButton}</Link>
-        </Button>
+        <Link to="/app" className={cn(buttonVariants({ variant: "default" }), "w-full bg-ink text-surface hover:bg-ink/90 rounded-xl")}>
+          {dashboardData.auth.login.submitButton}
+        </Link>
       </form>
       
       <p className="text-center text-sm text-muted-foreground mt-6">

@@ -78,6 +78,49 @@ export type Lead = {
   createdAt: string;
 };
 
+export type OnboardingStep = {
+  id: string;
+  title: string;
+  description: string;
+  type: 'text' | 'choice' | 'multiple_choice' | 'identity' | 'objective' | 'audience' | 'offers' | 'diagnostic' | 'conversion' | 'style' | 'review';
+  options?: string[];
+};
+
+export type OnboardingAnswer = {
+  stepId: string;
+  answer: string | string[];
+};
+
+export type AiSuggestion = {
+  id: string;
+  type: 'bio' | 'offer' | 'quiz' | 'theme';
+  content: string | Record<string, any>;
+  isAccepted: boolean;
+};
+
+export type PublishState = {
+  status: 'pending' | 'publishing' | 'published' | 'failed';
+  publishedAt: string | null;
+  publicUrl: string | null;
+};
+
+export type PreviewChecklistItem = {
+  id: string;
+  label: string;
+  isComplete: boolean;
+};
+
+export type PublicSmartBioData = {
+  tenantName: string;
+  title: string;
+  bio: string | null;
+  theme: string;
+  avatarUrl: string | null;
+  socialLinks: Record<string, string>;
+  offers: Offer[];
+  quizQuestions: QuizQuestion[];
+};
+
 export type Plan = {
   id: string;
   name: string;
