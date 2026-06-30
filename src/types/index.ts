@@ -67,14 +67,21 @@ export type QuizQuestion = {
   options: string[] | null;
   order: number;
   isRequired: boolean;
+  intention?: string;
+  status?: 'active' | 'draft' | 'paused';
 };
 
 export type RecommendationRule = {
   id: string;
   tenantId: string;
   name: string;
+  description?: string;
   condition: string; // JSON logic or simple string rule
   offerId: string;
+  recommendedOfferId?: string; // duplicate of offerId, but added just in case
+  recommendationReason?: string;
+  finalCta?: string;
+  status?: 'active' | 'draft' | 'paused';
   isActive: boolean;
 };
 

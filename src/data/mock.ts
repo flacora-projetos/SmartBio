@@ -1,4 +1,4 @@
-import { Plan, User, Tenant, SmartBio, Offer, AiSuggestion, QuizQuestion, PreviewChecklistItem, PublishState, PublicSmartBioData } from '../types';
+import { Plan, User, Tenant, SmartBio, Offer, AiSuggestion, QuizQuestion, RecommendationRule, PreviewChecklistItem, PublishState, PublicSmartBioData } from '../types';
 
 export const landingData = {
   hero: {
@@ -450,24 +450,63 @@ export const mockQuizQuestions: QuizQuestion[] = [
   {
     id: 'q_01',
     tenantId: 'tnt_01',
-    question: '[PERGUNTA_1_DO_QUIZ]',
+    question: 'Qual é o seu principal objetivo hoje?',
     type: 'choice',
-    options: ['[OPCAO_1A]', '[OPCAO_1B]'],
+    options: ['Organizar meus processos', 'Aumentar minhas vendas', 'Ter acompanhamento direto'],
     order: 1,
-    isRequired: true
+    isRequired: true,
+    intention: 'Entender objetivo',
+    status: 'active'
+  },
+  {
+    id: 'q_02',
+    tenantId: 'tnt_01',
+    question: 'Qual é o seu nível atual de faturamento?',
+    type: 'choice',
+    options: ['Ainda não vendo', 'Até 5k/mês', 'Mais de 10k/mês'],
+    order: 2,
+    isRequired: true,
+    intention: 'Identificar maturidade',
+    status: 'active'
   }
 ];
 
-export const mockRecommendationRules = [
+export const mockRecommendationRules: RecommendationRule[] = [
   {
     id: 'rule_01',
     tenantId: 'tnt_01',
-    name: '[REGRA_1]',
-    condition: 'SE Resposta = [OPCAO_1A]',
-    offerId: 'off_01',
+    name: 'Iniciantes querendo vender',
+    description: 'Se o visitante está no início e quer clareza, recomendar a oferta de entrada.',
+    condition: 'SE Objetivo = "Aumentar minhas vendas" E Faturamento = "Ainda não vendo"',
+    offerId: 'off_02',
+    recommendedOfferId: 'off_02',
+    recommendationReason: 'Identificamos que você precisa dos primeiros passos para começar a vender.',
+    finalCta: 'formulario',
+    status: 'active',
+    isActive: true
+  },
+  {
+    id: 'rule_02',
+    tenantId: 'tnt_01',
+    name: 'Avançado precisando de mentoria',
+    description: 'Se o visitante já sabe o que quer e precisa de acompanhamento, recomendar a mentoria.',
+    condition: 'SE Objetivo = "Ter acompanhamento direto" E Faturamento = "Mais de 10k/mês"',
+    offerId: 'off_03',
+    recommendedOfferId: 'off_03',
+    recommendationReason: 'Para o seu nível atual, a mentoria direta é o caminho mais rápido para escalar.',
+    finalCta: 'whatsapp',
+    status: 'active',
     isActive: true
   }
 ];
+
+export const mockRecommendationPreview = {
+  title: 'Recomendação para você',
+  offerName: '[OFERTA_MENTORIA]',
+  reason: 'Para o seu nível atual, a mentoria direta é o caminho mais rápido para escalar.',
+  nextSteps: ['Clique no botão abaixo', 'Envie a mensagem no WhatsApp', 'Nossa equipe fará o agendamento'],
+  buttonText: 'Falar no WhatsApp'
+};
 
 export const mockPreviewChecklist: PreviewChecklistItem[] = [
   { id: 'chk_1', label: 'Textos e Bio', isComplete: true },
