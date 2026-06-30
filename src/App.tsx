@@ -8,6 +8,7 @@ import { Onboarding } from '@/pages/dashboard/Onboarding';
 import { Offers } from '@/pages/dashboard/Offers';
 import { Quiz } from '@/pages/dashboard/Quiz';
 import { Preview } from '@/pages/dashboard/Preview';
+import { SmartBioPage } from '@/pages/public/SmartBioPage';
 
 export default function App() {
   return (
@@ -28,7 +29,7 @@ export default function App() {
         <Route path="/app/preview" element={<Preview />} />
         
         {/* Public Slug */}
-        <Route path="/s/:slug" element={<div>Página pública da SmartBio em breve</div>} />
+        <Route path="/s/:slug" element={<SmartBioPage />} />
       </Routes>
     </BrowserRouter>
   );

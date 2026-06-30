@@ -69,6 +69,7 @@ export function Preview() {
               publicUrl={publicUrl} 
               onApprove={handleApprove} 
               onCopyLink={handleCopyLink} 
+              onOpenLink={() => navigate(`/s/${mockTenant.slug}`)}
             />
             
             <PublishChecklist items={mockPreviewChecklist} />

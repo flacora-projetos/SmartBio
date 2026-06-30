@@ -6,9 +6,10 @@ interface PublishApprovalPanelProps {
   publicUrl: string;
   onApprove: () => void;
   onCopyLink: () => void;
+  onOpenLink?: () => void;
 }
 
-export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink }: PublishApprovalPanelProps) {
+export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink, onOpenLink }: PublishApprovalPanelProps) {
   return (
     <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       <div>
@@ -47,7 +48,7 @@ export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink 
             <Button onClick={onCopyLink} className="w-full rounded-xl bg-primary text-primary-foreground font-bold h-12">
               <Copy className="w-4 h-4 mr-2" /> Copiar Link Publicado
             </Button>
-            <Button variant="outline" className="w-full rounded-xl font-bold h-12">
+            <Button onClick={onOpenLink} variant="outline" className="w-full rounded-xl font-bold h-12">
               <ExternalLink className="w-4 h-4 mr-2" /> Abrir SmartBio Pública
             </Button>
           </>
