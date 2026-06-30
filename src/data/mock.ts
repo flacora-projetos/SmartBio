@@ -509,9 +509,12 @@ export const mockRecommendationPreview = {
 };
 
 export const mockPreviewChecklist: PreviewChecklistItem[] = [
-  { id: 'chk_1', label: 'Textos e Bio', isComplete: true },
-  { id: 'chk_2', label: 'Ofertas configuradas', isComplete: true },
-  { id: 'chk_3', label: 'Quiz e Regras de recomendação', isComplete: false },
+  { id: 'chk_1', label: 'Identidade revisada', isComplete: true },
+  { id: 'chk_2', label: 'Ofertas estruturadas', isComplete: true },
+  { id: 'chk_3', label: 'Quiz configurado', isComplete: true },
+  { id: 'chk_4', label: 'Regras de recomendação ativas', isComplete: true },
+  { id: 'chk_5', label: 'CTA final definido', isComplete: true },
+  { id: 'chk_6', label: 'Preview validado', isComplete: true },
 ];
 
 export const mockPublishState: PublishState = {
