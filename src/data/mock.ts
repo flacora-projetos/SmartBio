@@ -72,28 +72,25 @@ export const landingData = {
   },
   pricing: [
     {
-      id: "plan_essential",
-      name: "Presença",
-      description: "Para profissionais que querem uma bio com identidade e CTA direto.",
-      priceLabel: "[PRICE_ESSENTIAL]",
+      id: "plan_solo",
+      name: "Solo",
+      price: "97",
+      priceAnnual: "77",
+      description: "Para profissionais e marcas com uma operação.",
+      priceLabel: "R$97",
       currency: "R$",
-      features: ["SmartBio publicada em slug", "Perfil com identidade visual", "Links e redes sociais", "CTA principal", "Captura de leads simples"]
+      features: ["1 SmartBio publicada", "Até 5 ofertas", "Quiz de diagnóstico", "Recomendação personalizada", "Preview antes da publicação", "Leads com histórico de 60 dias", "Analytics de funil"]
     },
     {
-      id: "plan_intelligent",
-      name: "Conversão",
-      description: "Para quem quer transformar visitas em clientes qualificados.",
-      priceLabel: "[PRICE_INTELLIGENT]",
+      id: "plan_agencia",
+      name: "Agência",
+      price: "247",
+      priceAnnual: "197",
+      description: "Para agências e profissionais que gerenciam múltiplos clientes.",
+      priceLabel: "R$247",
       currency: "R$",
-      features: ["Tudo do Presença", "Onboarding guiado", "Diagnóstico com perguntas", "Recomendação personalizada por perfil", "Preview antes da publicação", "Leads qualificados"]
-    },
-    {
-      id: "plan_premium",
-      name: "Escala",
-      description: "Para agências, equipes e marcas com volume e múltiplos fluxos.",
-      priceLabel: "[PRICE_PREMIUM]",
-      currency: "R$",
-      features: ["Tudo do Conversão", "Agenda integrada", "Analytics de funil completo", "CRM leve com tags", "Suporte prioritário", "Templates por nicho e módulos avançados"]
+      features: ["Até 20 SmartBios publicadas", "Ofertas ilimitadas", "Quiz sem limite de perguntas", "Histórico de leads sem limite", "Analytics completo com exportação", "Domínio próprio (em breve)", "Suporte prioritário"],
+      highlighted: true
     }
   ],
   faq: {
@@ -155,31 +152,22 @@ export const mockUser: User = {
 
 export const mockPlans: Plan[] = [
   {
-    id: 'plan_essential',
-    name: 'Presença',
-    description: 'Para profissionais que querem uma bio com identidade e CTA direto.',
-    priceLabel: '[PRICE_ESSENTIAL]',
+    id: 'plan_solo',
+    name: 'Solo',
+    description: 'Para profissionais e marcas com uma operação.',
+    priceLabel: 'R$97',
     currency: 'BRL',
-    features: ['SmartBio publicada em slug', 'Perfil com identidade visual', 'Links e redes sociais', 'CTA principal', 'Captura de leads simples'],
-    stripePriceId: 'price_essential_test',
+    features: ['1 SmartBio publicada', 'Até 5 ofertas', 'Quiz de diagnóstico', 'Recomendação personalizada', 'Preview antes da publicação', 'Leads com histórico de 60 dias', 'Analytics de funil'],
+    stripePriceId: 'price_solo_test',
   },
   {
-    id: 'plan_intelligent',
-    name: 'Conversão',
-    description: 'Para quem quer transformar visitas em clientes qualificados.',
-    priceLabel: '[PRICE_INTELLIGENT]',
+    id: 'plan_agencia',
+    name: 'Agência',
+    description: 'Para agências e profissionais que gerenciam múltiplos clientes.',
+    priceLabel: 'R$247',
     currency: 'BRL',
-    features: ['Tudo do Presença', 'Onboarding guiado', 'Diagnóstico com perguntas', 'Recomendação personalizada por perfil', 'Preview antes da publicação', 'Leads qualificados'],
-    stripePriceId: 'price_intelligent_test',
-  },
-  {
-    id: 'plan_premium',
-    name: 'Escala',
-    description: 'Para agências, equipes e marcas com volume e múltiplos fluxos.',
-    priceLabel: '[PRICE_PREMIUM]',
-    currency: 'BRL',
-    features: ['Tudo do Conversão', 'Agenda integrada', 'Analytics de funil completo', 'CRM leve com tags', 'Suporte prioritário', 'Templates por nicho e módulos avançados'],
-    stripePriceId: 'price_premium_test',
+    features: ['Até 20 SmartBios publicadas', 'Ofertas ilimitadas', 'Quiz sem limite de perguntas', 'Histórico de leads sem limite', 'Analytics completo com exportação', 'Domínio próprio (em breve)', 'Suporte prioritário'],
+    stripePriceId: 'price_agencia_test',
   }
 ];
 
@@ -307,8 +295,8 @@ export const mockCreationFlowSteps = [
 ];
 
 export const mockSubscription = {
-  planId: 'plan_intelligent',
-  planName: 'Conversão',
+  planId: 'plan_solo',
+  planName: 'Solo',
   status: 'active', // active, past_due, canceled
 };
 
