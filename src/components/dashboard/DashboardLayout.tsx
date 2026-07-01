@@ -8,6 +8,7 @@ import {
   Package,
   HelpCircle,
   Eye,
+  Calendar,
   Users,
   BarChart2,
   CreditCard,
@@ -35,6 +36,7 @@ const smartbioItems = [
   { label: 'Ofertas', path: '/app/offers', icon: Package },
   { label: 'Quiz e recomendação', path: '/app/quiz', icon: HelpCircle },
   { label: 'Preview e publicação', path: '/app/preview', icon: Eye },
+  { label: 'Agenda', path: '/app/agenda', icon: Calendar },
 ];
 
 const bottomNavItems = [

@@ -1,5 +1,20 @@
 import { supabase } from '@/lib/supabase';
 
+export type AgendaService = {
+  name: string;
+  duration_minutes: number;
+};
+
+export type AgendaConfig = {
+  enabled: boolean;
+  services: AgendaService[];
+  available_days: number[];   // 0=Dom … 6=Sab
+  start_time: string;         // "09:00"
+  end_time: string;           // "18:00"
+  slot_duration_minutes: number;
+  advance_days: number;
+};
+
 export type PublicSmartBio = {
   id: string;
   tenant_id: string;
@@ -10,6 +25,7 @@ export type PublicSmartBio = {
   theme_config: Record<string, unknown>;
   tracking_config: Record<string, unknown>;
   social_links: Record<string, string>;
+  agenda_config: AgendaConfig | null;
 };
 
 export type PublicOffer = {
@@ -68,7 +84,7 @@ export type PausedPageData = {
 export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | PausedPageData | null> {
   const { data: smartbio, error } = await supabase
     .from('smartbios')
-    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config, social_links')
+    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config, social_links, agenda_config')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
@@ -111,7 +127,11 @@ export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData 
   ]);
 
   return {
-    smartbio: { ...smartbio, social_links: (smartbio.social_links ?? {}) } as PublicSmartBio,
+    smartbio: {
+      ...smartbio,
+      social_links: (smartbio.social_links ?? {}),
+      agenda_config: (smartbio.agenda_config as AgendaConfig | null) ?? null,
+    } as PublicSmartBio,
     offers: (offersRes.data ?? []) as PublicOffer[],
     questions: (questionsRes.data ?? []) as PublicQuestion[],
     rules: (rulesRes.data ?? []) as PublicRule[],

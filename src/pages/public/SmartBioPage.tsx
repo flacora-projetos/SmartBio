@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { PublicSmartBioHeader } from '@/components/public/PublicSmartBioHeader';
 import { QuizFlowMock } from '@/components/public/QuizFlowMock';
 import { RecommendationResult } from '@/components/public/RecommendationResult';
+import { SchedulingWidget } from '@/components/public/SchedulingWidget';
 import { useTrackingTags } from '@/hooks/useTrackingTags';
 import {
   fetchPublicSmartBio,
@@ -246,9 +247,12 @@ export function SmartBioPage() {
 
   if (!pageData) return null;
 
-  const hasOffers = pageData.offers.length > 0;
-  const hasAssets = pageData.assets.length > 0;
-  const hasQuiz   = pageData.questions.length > 0;
+  const hasOffers  = pageData.offers.length > 0;
+  const hasAssets  = pageData.assets.length > 0;
+  const hasQuiz    = pageData.questions.length > 0;
+  const agendaCfg  = pageData.smartbio.agenda_config;
+  const hasAgenda  = agendaCfg?.enabled === true;
+  const accentColor = (pageData.smartbio.theme_config?.accentColor as string | undefined) ?? '#000000';
 
   // ── Conteúdo central scrollável (compartilhado entre mobile e desktop) ────
   const mainContent = (
@@ -323,6 +327,18 @@ export function SmartBioPage() {
               <AssetCard key={asset.id} asset={asset} />
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Agenda */}
+      {hasAgenda && agendaCfg && (
+        <section>
+          <SchedulingWidget
+            smartbioId={pageData.smartbio.id}
+            tenantId={pageData.smartbio.tenant_id}
+            config={agendaCfg}
+            accentColor={accentColor}
+          />
         </section>
       )}
 
