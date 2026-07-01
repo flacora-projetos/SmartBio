@@ -1,94 +1,93 @@
-import { MessageSquare, Calendar, Users, Instagram, Twitter, Linkedin, Sparkles } from 'lucide-react';
+import { ArrowRight, CheckCircle, Sparkles, Calendar } from 'lucide-react';
 import { landingData } from '@/data/mock';
 
 export function SmartBioPhoneMock() {
   return (
-    <div className="w-[300px] h-[600px] bg-background rounded-[3rem] border-[10px] border-ink shadow-2xl overflow-hidden relative flex flex-col items-center">
+    <div className="w-[300px] h-[600px] bg-background rounded-[3rem] border-[10px] border-ink shadow-2xl overflow-hidden relative flex flex-col">
       {/* Notch */}
-      <div className="h-6 w-1/3 bg-ink absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20"></div>
-      
-      {/* Bio Header */}
-      <div className="w-full pt-12 pb-6 px-6 flex flex-col items-center bg-surface border-b border-border">
-        <div className="w-20 h-20 rounded-full bg-border border-4 border-background overflow-hidden mb-4 relative shadow-sm">
-          {/* Avatar Placeholder */}
-          <div className="absolute inset-0 bg-primary/5 flex items-center justify-center">
-            <Users className="w-6 h-6 text-primary/40" />
-          </div>
+      <div className="h-6 w-1/3 bg-ink absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
+
+      {/* Profile Header */}
+      <div className="w-full pt-10 pb-5 px-6 flex flex-col items-center bg-surface border-b border-border">
+        <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-background mb-3 shadow-sm flex items-center justify-center">
+          <span className="text-xl font-bold font-heading text-primary">TP</span>
         </div>
-        <h3 className="text-lg font-heading font-bold text-ink mb-1">{landingData.mockBio.name}</h3>
-        <p className="text-xs text-muted-foreground text-center line-clamp-2 mb-4">
-          {landingData.mockBio.bio}
+        <h3 className="text-base font-heading font-bold text-ink">{landingData.mockBio.name}</h3>
+        <p className="text-[11px] text-muted-foreground text-center mt-0.5">
+          Consultora de negócios · e-commerce
         </p>
-        
-        {/* Social Icons Placeholder */}
-        <div className="flex gap-3 text-muted-foreground">
-          <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-            <Instagram className="w-4 h-4" />
-          </div>
-          <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-            <Twitter className="w-4 h-4" />
-          </div>
-          <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-            <Linkedin className="w-4 h-4" />
-          </div>
-        </div>
       </div>
 
-      {/* Interactive Module */}
-      <div className="flex-1 w-full bg-background p-6 flex flex-col gap-4 overflow-y-auto hide-scrollbar">
-        
-        {/* Recommendation Quiz Starter */}
-        <div className="bg-primary text-primary-foreground p-5 rounded-2xl shadow-md relative overflow-hidden">
-          <div className="absolute top-2 right-2 text-primary-foreground/30">
-            <Sparkles className="w-4 h-4" />
+      {/* Content */}
+      <div className="flex-1 w-full bg-background px-4 py-4 flex flex-col gap-3 overflow-hidden">
+
+        {/* Quiz card — mostra pergunta em progresso com opção selecionada */}
+        <div className="bg-surface border border-border rounded-2xl p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">
+              Pergunta 1 de 2
+            </span>
+            <div className="flex gap-1">
+              <div className="w-8 h-1 rounded-full bg-primary" />
+              <div className="w-8 h-1 rounded-full bg-border" />
+            </div>
           </div>
-          <p className="text-xs font-bold uppercase tracking-wider mb-1 text-primary-foreground/80">Diagnóstico Inteligente</p>
-          <p className="text-sm font-medium mb-3">Qual é o seu maior desafio hoje?</p>
+
+          <p className="text-[13px] font-bold text-ink mb-3 leading-snug">
+            Qual é o seu maior desafio hoje?
+          </p>
+
           <div className="space-y-2">
-            <div className="bg-primary-foreground/10 py-2 px-3 rounded-lg text-xs cursor-pointer hover:bg-primary-foreground/20 transition-colors">
+            {/* Opção selecionada */}
+            <div className="bg-primary text-primary-foreground py-2 px-3 rounded-xl text-[11px] font-semibold flex items-center gap-2">
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
               Preciso de mais vendas
             </div>
-            <div className="bg-primary-foreground/10 py-2 px-3 rounded-lg text-xs cursor-pointer hover:bg-primary-foreground/20 transition-colors">
+            {/* Opção não selecionada */}
+            <div className="border border-border py-2 px-3 rounded-xl text-[11px] text-muted-foreground flex items-center gap-2">
+              <div className="w-3.5 h-3.5 rounded-full border border-border shrink-0" />
               Quero organizar meus processos
             </div>
           </div>
         </div>
 
-        {/* Recommendation & CTA Module */}
-        <div className="space-y-3">
-          <div className="bg-surface border border-border p-4 rounded-2xl">
-            <p className="text-xs font-bold uppercase tracking-wider mb-2 text-success">Recomendado para você</p>
-            <div className="flex items-center gap-4">
-              <div className="bg-background p-2 rounded-xl shadow-sm border border-border shrink-0">
-                <Calendar className="w-5 h-5 text-ink" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-ink">Agendar Consultoria</p>
-                <p className="text-[10px] text-muted-foreground leading-tight mt-1">Baseado nas suas respostas, este é o próximo passo ideal.</p>
-              </div>
-            </div>
+        {/* Resultado da recomendação — card destacado com borda primary */}
+        <div className="border-2 border-primary rounded-2xl overflow-hidden bg-surface">
+          <div className="bg-primary/8 px-4 py-2.5 border-b border-primary/10 flex items-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[9px] font-bold uppercase tracking-wider text-primary">
+              Indicação ideal para você
+            </span>
           </div>
-
-          <div className="bg-surface border border-border p-4 rounded-2xl flex items-center gap-4">
-            <div className="bg-background p-2 rounded-xl shadow-sm border border-border shrink-0">
-              <MessageSquare className="w-5 h-5 text-ink" />
+          <div className="p-4">
+            <div className="flex items-start gap-3 mb-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                <Calendar className="w-4 h-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[13px] font-bold text-ink leading-tight">Consultoria Estratégica</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 leading-snug">
+                  Ideal para quem quer crescer nas vendas pelo Instagram.
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-ink">Falar no WhatsApp</p>
-              <p className="text-[10px] text-muted-foreground leading-tight mt-1">Dúvidas rápidas? Fale com a equipe.</p>
-            </div>
+            <button className="w-full bg-primary text-primary-foreground rounded-xl py-2.5 text-[11px] font-bold flex items-center justify-center gap-1.5 shadow-sm">
+              Agendar agora <ArrowRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
       </div>
 
-      {/* Footer Branding */}
-      <div className="w-full py-3 bg-surface border-t border-border flex justify-center items-center gap-2">
-        <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Criado com SmartBio</span>
+      {/* Footer branding */}
+      <div className="w-full py-2.5 bg-surface border-t border-border flex justify-center">
+        <span className="text-[9px] text-muted-foreground/70 font-bold uppercase tracking-wider">
+          Criado com SmartBio
+        </span>
       </div>
-      
-      {/* Home Indicator */}
-      <div className="h-1 w-24 bg-border absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full"></div>
+
+      {/* Home indicator */}
+      <div className="h-1 w-20 bg-border absolute bottom-1.5 left-1/2 -translate-x-1/2 rounded-full" />
     </div>
   );
 }
