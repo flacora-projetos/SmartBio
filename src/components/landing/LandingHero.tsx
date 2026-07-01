@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 export function LandingHero() {
   return (
-    <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden flex flex-col items-center justify-center text-center px-4">
+    <section className="relative pt-16 pb-20 md:pt-32 md:pb-32 overflow-hidden flex flex-col items-center justify-center text-center px-4">
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12vw] font-heading font-bold text-black/[0.03] select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter">
         {landingData.hero.backgroundTypography}
       </div>
