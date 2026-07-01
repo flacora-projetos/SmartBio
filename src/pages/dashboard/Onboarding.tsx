@@ -35,6 +35,18 @@ const initialAnswers: OnboardingDraftAnswers = {
 
 const DRAFT_KEY = 'smartbio_onboarding_draft';
 
+function extractMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object') {
+    const obj = err as Record<string, unknown>;
+    if (typeof obj.message === 'string') return obj.message;
+    if (typeof obj.details === 'string') return obj.details;
+    if (typeof obj.hint === 'string') return obj.hint;
+    return JSON.stringify(obj);
+  }
+  return String(err);
+}
+
 function loadDraft(): Partial<OnboardingDraftAnswers> {
   try {
     const raw = localStorage.getItem(DRAFT_KEY);
@@ -105,8 +117,8 @@ export function Onboarding() {
       try {
         resolvedTenant = await getOrCreateTenant(user);
       } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error('[Onboarding] Fallback de tenant falhou:', msg);
+        const msg = extractMessage(err);
+        console.error('[Onboarding] Fallback de tenant falhou:', err);
         setErrorMessage(`Erro ao carregar workspace: ${msg}. Recarregue a página e tente novamente.`);
         return;
       }
@@ -127,9 +139,8 @@ export function Onboarding() {
       clearDraft();
       navigate('/app/preview');
     } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      console.error('[Onboarding] generateInitialPreview falhou:', msg);
-      setErrorMessage(`Erro ao gerar preview: ${msg}`);
+      console.error('[Onboarding] generateInitialPreview falhou:', error);
+      setErrorMessage(`Erro ao gerar preview: ${extractMessage(error)}`);
     } finally {
       setIsGenerating(false);
     }
