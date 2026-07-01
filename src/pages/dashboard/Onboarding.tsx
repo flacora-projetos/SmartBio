@@ -20,12 +20,14 @@ const initialAnswers: OnboardingDraftAnswers = {
   pain: '',
   offerTitle: '',
   offerDescription: '',
-  diagnosticTitle: 'Diagnostico Inteligente',
-  diagnosticQuestion: 'Qual e o seu principal objetivo hoje?',
+  diagnosticTitle: 'Diagnóstico Inteligente',
+  diagnosticQuestion: 'Qual é o seu principal objetivo hoje?',
   diagnosticOptions: ['Organizar meus processos', 'Aumentar minhas vendas', 'Ter acompanhamento direto'],
+  diagnosticQuestion2: '',
+  diagnosticOptions2: ['', '', ''],
   conversionDestination: 'whatsapp',
   buttonText: 'Falar no WhatsApp',
-  conversionMessage: 'Ola! Acabei de fazer o diagnostico na SmartBio e gostaria de entender o proximo passo.',
+  conversionMessage: 'Olá! Acabei de fazer o diagnóstico na SmartBio e gostaria de entender o próximo passo.',
   theme: 'light',
   accentColor: '#000000',
 };
@@ -37,6 +39,7 @@ export function Onboarding() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [showSecondQuestion, setShowSecondQuestion] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { tenant, user } = useAuth();
@@ -81,6 +84,12 @@ export function Onboarding() {
     const nextOptions = [...answers.diagnosticOptions];
     nextOptions[index] = value;
     updateAnswer('diagnosticOptions', nextOptions);
+  };
+
+  const updateDiagnosticOption2 = (index: number, value: string) => {
+    const nextOptions = [...answers.diagnosticOptions2];
+    nextOptions[index] = value;
+    updateAnswer('diagnosticOptions2', nextOptions);
   };
 
   const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,25 +228,111 @@ export function Onboarding() {
           </div>
         );
 
-      case 'diagnostic':
+      case 'diagnostic': {
+        const titleSuggestions = [
+          'Diagnóstico Inteligente',
+          'Qual é o seu perfil?',
+          'Me conta sobre você',
+          'Encontre sua solução',
+          'Para quem é isso?',
+        ];
+        const inputClass = 'w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm';
+
         return (
-          <div className="space-y-5">
+          <div className="space-y-6">
+            {/* Título */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Titulo do diagnostico</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.diagnosticTitle} onChange={(event) => updateAnswer('diagnosticTitle', event.target.value)} />
+              <label className="text-sm font-medium text-ink">Título do diagnóstico</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {titleSuggestions.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => updateAnswer('diagnosticTitle', s)}
+                    className={`px-3 py-1 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
+                      answers.diagnosticTitle === s
+                        ? 'border-primary bg-primary/5 text-primary'
+                        : 'border-border bg-surface hover:border-primary/50 text-muted-foreground'
+                    }`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+              <input className={inputClass} value={answers.diagnosticTitle} onChange={(e) => updateAnswer('diagnosticTitle', e.target.value)} placeholder="Ex: Diagnóstico Inteligente" />
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Primeira pergunta</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.diagnosticQuestion} onChange={(event) => updateAnswer('diagnosticQuestion', event.target.value)} />
+
+            {/* Pergunta 1 */}
+            <div className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta 1</p>
+              <input
+                className={inputClass}
+                value={answers.diagnosticQuestion}
+                onChange={(e) => updateAnswer('diagnosticQuestion', e.target.value)}
+                placeholder="Ex: Qual é o seu principal objetivo hoje?"
+              />
+              <div className="space-y-2">
+                <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
+                {answers.diagnosticOptions.map((option, index) => (
+                  <input
+                    key={index}
+                    className={inputClass}
+                    value={option}
+                    onChange={(e) => updateDiagnosticOption(index, e.target.value)}
+                    placeholder={`Opção ${index + 1}`}
+                  />
+                ))}
+              </div>
             </div>
-            <div className="space-y-3">
-              <h4 className="text-sm font-bold text-ink">Opcoes de resposta</h4>
-              {answers.diagnosticOptions.map((option, index) => (
-                <input key={index} className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm" value={option} onChange={(event) => updateDiagnosticOption(index, event.target.value)} />
-              ))}
-            </div>
+
+            {/* Pergunta 2 */}
+            {showSecondQuestion ? (
+              <div className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta 2</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSecondQuestion(false);
+                      updateAnswer('diagnosticQuestion2', '');
+                      updateAnswer('diagnosticOptions2', ['', '', '']);
+                    }}
+                    className="text-xs text-destructive hover:underline cursor-pointer"
+                  >
+                    Remover
+                  </button>
+                </div>
+                <input
+                  className={inputClass}
+                  value={answers.diagnosticQuestion2}
+                  onChange={(e) => updateAnswer('diagnosticQuestion2', e.target.value)}
+                  placeholder="Ex: Qual é o seu nível de experiência?"
+                />
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
+                  {answers.diagnosticOptions2.map((option, index) => (
+                    <input
+                      key={index}
+                      className={inputClass}
+                      value={option}
+                      onChange={(e) => updateDiagnosticOption2(index, e.target.value)}
+                      placeholder={`Opção ${index + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowSecondQuestion(true)}
+                className="w-full py-2.5 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
+              >
+                + Adicionar segunda pergunta
+              </button>
+            )}
           </div>
         );
+      }
 
       case 'conversion':
         return (
@@ -405,9 +500,14 @@ export function Onboarding() {
                   offers: answers.offerTitle
                     ? [{ title: answers.offerTitle, description: answers.offerDescription } as unknown as PublicSmartBioData['offers'][0]]
                     : [],
-                  quizQuestions: answers.diagnosticQuestion
-                    ? [{ question: answers.diagnosticQuestion, options: answers.diagnosticOptions.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
-                    : [],
+                  quizQuestions: [
+                    ...(answers.diagnosticQuestion
+                      ? [{ question: answers.diagnosticQuestion, options: answers.diagnosticOptions.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
+                      : []),
+                    ...(showSecondQuestion && answers.diagnosticQuestion2
+                      ? [{ question: answers.diagnosticQuestion2, options: answers.diagnosticOptions2.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
+                      : []),
+                  ],
                 }} />
               </div>
             </div>

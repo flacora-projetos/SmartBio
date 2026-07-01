@@ -52,6 +52,8 @@ export type OnboardingDraftAnswers = {
   diagnosticTitle: string;
   diagnosticQuestion: string;
   diagnosticOptions: string[];
+  diagnosticQuestion2: string;
+  diagnosticOptions2: string[];
   conversionDestination: string;
   buttonText: string;
   conversionMessage: string;
@@ -210,7 +212,7 @@ async function saveOnboardingAnswers(tenantId: string, smartbioId: string, answe
     { step_id: 'step_objective', answer: { objective: answers.objective } },
     { step_id: 'step_audience', answer: { audience: answers.audience, pain: answers.pain } },
     { step_id: 'step_offers', answer: { title: answers.offerTitle, description: answers.offerDescription } },
-    { step_id: 'step_diagnostic', answer: { title: answers.diagnosticTitle, question: answers.diagnosticQuestion, options: answers.diagnosticOptions } },
+    { step_id: 'step_diagnostic', answer: { title: answers.diagnosticTitle, question: answers.diagnosticQuestion, options: answers.diagnosticOptions, question2: answers.diagnosticQuestion2, options2: answers.diagnosticOptions2 } },
     { step_id: 'step_conversion', answer: { destination: answers.conversionDestination, buttonText: answers.buttonText, message: answers.conversionMessage } },
     { step_id: 'step_style', answer: { theme: answers.theme, accentColor: answers.accentColor } },
   ].map((row) => ({
@@ -338,6 +340,42 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
       .eq('sort_order', 1);
 
     if (questionUpdateError) throw questionUpdateError;
+  }
+
+  // Segunda pergunta (opcional)
+  const q2Text = answers.diagnosticQuestion2.trim();
+  if (q2Text) {
+    const rawOptions2 = answers.diagnosticOptions2 ?? [];
+    const options2 = rawOptions2.map((o) => o.trim()).filter(Boolean);
+    const fallbackOptions2 = options2.length > 0 ? options2 : ['Opção A', 'Opção B', 'Opção C'];
+
+    const { data: existingQ2 } = await supabase
+      .from('quiz_questions')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('smartbio_id', smartbio.id)
+      .eq('sort_order', 2)
+      .maybeSingle();
+
+    if (!existingQ2) {
+      await supabase.from('quiz_questions').insert({
+        tenant_id: tenant.id,
+        smartbio_id: smartbio.id,
+        question: q2Text,
+        type: 'single_choice',
+        options: fallbackOptions2,
+        intention: 'Complementar o diagnóstico',
+        status: 'active',
+        is_required: false,
+        sort_order: 2,
+      });
+    } else {
+      await supabase.from('quiz_questions').update({
+        question: q2Text,
+        options: fallbackOptions2,
+        status: 'active',
+      }).eq('id', existingQ2.id);
+    }
   }
 
   const { count: ruleCount, error: ruleCountError } = await supabase

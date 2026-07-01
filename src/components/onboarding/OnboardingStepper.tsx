@@ -1,4 +1,5 @@
 import { Check } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 
 interface OnboardingStepperProps {
   steps: { id: string; title: string }[];
@@ -7,14 +8,24 @@ interface OnboardingStepperProps {
 }
 
 export function OnboardingStepper({ steps, currentStepIndex, onStepClick }: OnboardingStepperProps) {
+  const activeRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ inline: 'center', behavior: 'smooth', block: 'nearest' });
+  }, [currentStepIndex]);
+
   return (
-    <div className="flex items-center w-full justify-between overflow-x-auto hide-scrollbar pb-2">
+    <div className="flex items-center w-full overflow-x-auto hide-scrollbar pb-2">
       {steps.map((step, index) => {
         const isCompleted = index < currentStepIndex;
         const isCurrent = index === currentStepIndex;
 
         return (
-          <div key={step.id} className="flex items-center min-w-max">
+          <div
+            key={step.id}
+            className="flex items-center min-w-max"
+            ref={isCurrent ? activeRef : undefined}
+          >
             <div
               className={`flex flex-col items-center cursor-pointer transition-colors ${
                 isCompleted ? 'text-success' : isCurrent ? 'text-primary' : 'text-muted-foreground'
@@ -36,7 +47,7 @@ export function OnboardingStepper({ steps, currentStepIndex, onStepClick }: Onbo
             </div>
             {index < steps.length - 1 && (
               <div
-                className={`w-12 sm:w-20 h-0.5 mx-2 -translate-y-3 transition-colors ${
+                className={`w-12 sm:w-20 h-0.5 mx-2 -translate-y-3 transition-colors shrink-0 ${
                   isCompleted ? 'bg-success/40' : 'bg-border'
                 }`}
               />
