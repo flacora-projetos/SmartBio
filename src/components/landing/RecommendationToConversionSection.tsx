@@ -1,5 +1,5 @@
 import { landingData } from '@/data/mock';
-import { MessageCircle, ArrowRight, Calendar, CreditCard } from 'lucide-react';
+import { MessageCircle, Calendar, ShoppingBag } from 'lucide-react';
 
 export function RecommendationToConversionSection() {
   return (
@@ -20,7 +20,7 @@ export function RecommendationToConversionSection() {
               <Calendar className="w-8 h-8 text-ink" />
             </div>
             <h3 className="font-bold text-xl mb-2">Agendamento</h3>
-            <p className="text-muted-foreground text-sm">O visitante agenda uma reunião direto na sua SmartBio.</p>
+            <p className="text-muted-foreground text-sm">Consulta, visita, procedimento ou atendimento — redireciona para sua ferramenta de agenda.</p>
           </div>
           <div className="bg-primary text-primary-foreground border border-primary p-8 rounded-3xl text-center flex flex-col items-center shadow-xl transform md:-translate-y-4">
             <div className="w-16 h-16 bg-primary-foreground/10 rounded-2xl flex items-center justify-center mb-6">
@@ -31,10 +31,10 @@ export function RecommendationToConversionSection() {
           </div>
           <div className="bg-surface border border-border p-8 rounded-3xl text-center flex flex-col items-center">
             <div className="w-16 h-16 bg-card rounded-2xl flex items-center justify-center mb-6 border border-border shadow-sm">
-              <CreditCard className="w-8 h-8 text-ink" />
+              <ShoppingBag className="w-8 h-8 text-ink" />
             </div>
-            <h3 className="font-bold text-xl mb-2">Checkout</h3>
-            <p className="text-muted-foreground text-sm">Conecta com Stripe ou outros gateways para venda direta.</p>
+            <h3 className="font-bold text-xl mb-2">Página de Venda</h3>
+            <p className="text-muted-foreground text-sm">Envia o lead qualificado direto para o produto, loja ou LP certa para o perfil dele.</p>
           </div>
         </div>
       </div>
