@@ -3,7 +3,7 @@ import { Check, X } from 'lucide-react';
 
 export function ProblemComparison() {
   return (
-    <section className="py-24 bg-background">
+    <section className="py-24 bg-surface">
       <div className="container mx-auto px-4 max-w-6xl">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-heading font-bold text-ink mb-4">{landingData.problem.title}</h2>

@@ -21,7 +21,7 @@ export function LandingNavbar() {
             Entrar
           </a>
           <a href="/signup" className={cn(buttonVariants({ variant: "default" }), "rounded-full bg-primary text-primary-foreground hover:bg-primary/90 px-6")}>
-            Começar
+            Começar grátis
           </a>
         </div>
       </div>

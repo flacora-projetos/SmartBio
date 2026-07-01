@@ -24,12 +24,12 @@ export const landingData = {
     title: "Como funciona a SmartBio?",
     subtitle: "Você não monta um site. Você descreve o seu negócio e a SmartBio gera uma experiência de conversão pronta para publicar.",
     steps: [
-      { step: "1", title: "Escolha o plano" },
-      { step: "2", title: "Crie sua conta" },
-      { step: "3", title: "Responda o onboarding guiado" },
-      { step: "4", title: "Revise o preview gerado" },
-      { step: "5", title: "Aprove a publicação" },
-      { step: "6", title: "Copie o link publicado" }
+      { step: "1", title: "Escolha o plano", subtitle: "7 dias grátis, sem cartão de crédito." },
+      { step: "2", title: "Crie sua conta", subtitle: "30 segundos. Só e-mail e senha." },
+      { step: "3", title: "Responda o onboarding guiado", subtitle: "Perguntas diretas sobre seu negócio. Em média 15 minutos." },
+      { step: "4", title: "Revise o preview gerado", subtitle: "Veja sua SmartBio montada antes de qualquer publicação." },
+      { step: "5", title: "Aprove a publicação", subtitle: "Um clique. A plataforma publica automaticamente." },
+      { step: "6", title: "Copie o link publicado", subtitle: "Cole na bio do Instagram. Pronto para receber visitas." }
     ]
   },
   blocks: [
@@ -136,8 +136,8 @@ export const landingData = {
     links: ["Termos", "Privacidade", "Suporte"]
   },
   mockBio: {
-    name: "[Nome do Especialista]",
-    bio: "[Bio inteligente gerada pela IA focada em autoridade e clareza para o visitante]"
+    name: "Talita Pinheiro",
+    bio: "Consultora de negócios para e-commerce. Ajudo marcas a venderem mais pelo Instagram."
   }
 };
 

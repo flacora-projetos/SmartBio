@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 export function LandingHero() {
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 overflow-hidden flex flex-col items-center justify-center text-center px-4">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12vw] font-heading font-bold text-black/[0.02] select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[12vw] font-heading font-bold text-black/[0.03] select-none pointer-events-none whitespace-nowrap z-0 tracking-tighter">
         {landingData.hero.backgroundTypography}
       </div>
 
@@ -28,23 +28,27 @@ export function LandingHero() {
           </Button>
         </div>
 
-        <div className="mt-16 flex flex-col sm:flex-row gap-6">
+        <p className="text-sm text-muted-foreground mt-5">
+          7 dias grátis · sem cartão de crédito · cancele quando quiser
+        </p>
+
+        <div className="mt-12 flex flex-col sm:flex-row gap-4">
           <div className="bg-surface px-6 py-4 rounded-2xl border border-border flex items-center gap-4 shadow-sm">
-            <div className="bg-primary/10 p-2 rounded-full">
+            <div className="bg-primary/10 p-2 rounded-full shrink-0">
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div className="text-left">
-              <p className="font-bold text-ink">Configuração Guiada</p>
-              <p className="text-xs text-muted-foreground">Pronta em minutos</p>
+              <p className="font-bold text-ink text-sm">Onboarding Guiado</p>
+              <p className="text-xs text-muted-foreground">SmartBio pronta em minutos</p>
             </div>
           </div>
           <div className="bg-surface px-6 py-4 rounded-2xl border border-border flex items-center gap-4 shadow-sm">
-            <div className="bg-success/10 p-2 rounded-full">
+            <div className="bg-success/10 p-2 rounded-full shrink-0">
               <ArrowRight className="w-5 h-5 text-success" />
             </div>
             <div className="text-left">
-              <p className="font-bold text-ink">Foco em Conversão</p>
-              <p className="text-xs text-muted-foreground">Recomendações precisas</p>
+              <p className="font-bold text-ink text-sm">Foco em Conversão</p>
+              <p className="text-xs text-muted-foreground">Recomendação personalizada por perfil</p>
             </div>
           </div>
         </div>

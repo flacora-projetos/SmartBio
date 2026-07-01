@@ -8,15 +8,15 @@ export function Footer() {
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center text-ink font-bold text-lg italic font-heading">S</div>
           <span className="font-bold text-lg tracking-tight uppercase">SmartBio</span>
         </div>
-        
+
         <nav className="flex items-center gap-8">
           {landingData.footer.links.map((link, i) => (
-            <span key={i} className="text-sm text-white/40 cursor-default select-none">
+            <a key={i} href="#" className="text-sm text-white/40 hover:text-white/70 transition-colors">
               {link}
-            </span>
+            </a>
           ))}
         </nav>
-        
+
         <div className="text-sm text-white/50">
           &copy; {new Date().getFullYear()} SmartBio. Todos os direitos reservados.
         </div>
