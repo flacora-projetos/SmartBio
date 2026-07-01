@@ -2,27 +2,27 @@ import { Plan, User, Tenant, SmartBio, Offer, AiSuggestion, QuizQuestion, Recomm
 
 export const landingData = {
   hero: {
-    title: "Crie uma bio inteligente, aprove o preview e publique em minutos.",
-    subtitle: "A SmartBio guia seu onboarding, organiza suas ofertas, gera uma página pública de conversão e entrega um link pronto para colocar na bio das suas redes.",
+    title: "Sua bio pode guiar, qualificar e converter visitantes. Sem você estar online.",
+    subtitle: "A SmartBio transforma sua bio em uma jornada de conversão personalizada: entende o perfil do visitante, recomenda a oferta certa e entrega o próximo passo. Você responde o onboarding, aprova o preview e copia o link.",
     primaryCta: "Criar minha SmartBio",
     secondaryCta: "Ver como funciona",
     backgroundTypography: "SMARTBIO"
   },
   problem: {
     title: "Mostrar todos os links é deixar a decisão para o visitante.",
-    subtitle: "A SmartBio transforma sua bio em uma jornada guiada: pergunta, entende, recomenda e converte.",
+    subtitle: "A SmartBio transforma sua bio em uma jornada guiada: entende o visitante, recomenda o que faz sentido para ele e conduz para o próximo passo certo.",
     before: {
       title: "Como é hoje",
-      items: ["Muitos links na bio", "Visitante confuso", "Decisão manual", "Leads pouco qualificados"]
+      items: ["Bio que lista tudo, não direciona nada", "Visitante decide sozinho — ou vai embora", "Você qualifica clientes no DM manualmente", "Não sabe qual link converte mais"]
     },
     after: {
       title: "Com SmartBio",
-      items: ["Onboarding guiado", "Página gerada automaticamente", "Visitante responde perguntas", "Recomendação clara", "CTA certo no final"]
+      items: ["Fluxo de diagnóstico com perguntas rápidas", "Recomendação personalizada por perfil", "Qualificação automática antes do CTA", "Link certo para o visitante certo", "Você aprova — a plataforma publica"]
     }
   },
   howItWorks: {
     title: "Como funciona a SmartBio?",
-    subtitle: "Você não monta uma lista de links. Você responde um onboarding e a plataforma gera uma experiência de conversão.",
+    subtitle: "Você não monta um site. Você descreve o seu negócio e a SmartBio gera uma experiência de conversão pronta para publicar.",
     steps: [
       { step: "1", title: "Escolha o plano" },
       { step: "2", title: "Crie sua conta" },
@@ -34,29 +34,29 @@ export const landingData = {
   },
   blocks: [
     {
-      title: "Você responde o onboarding",
-      description: "A plataforma coleta contexto, ofertas, público e objetivo do seu negócio."
+      title: "Você descreve, a SmartBio estrutura",
+      description: "No onboarding guiado, você conta quem é, o que vende e para quem. A plataforma organiza tudo em ofertas, perguntas e regras."
     },
     {
-      title: "A SmartBio estrutura tudo para você",
-      description: "Montagem automática com copy persuasivo, módulos e fluxo."
+      title: "Preview gerado, pronto para você aprovar",
+      description: "Textos, estrutura e fluxo de recomendação montados automaticamente. Você revisa, aprova e publica — sem tocar em código."
     },
     {
-      title: "O visitante recebe uma recomendação",
-      description: "Diagnóstico inteligente faz perguntas e recomenda o próximo passo."
+      title: "Cada visitante recebe a recomendação certa",
+      description: "Perguntas rápidas identificam o perfil e o sistema indica o melhor próximo passo para cada tipo de visitante."
     },
     {
-      title: "O SaaS publica e mede resultados",
-      description: "Publicação em slug, captura de leads e envio para conversão."
+      title: "Publicado, mensurável, sempre no ar",
+      description: "Um link na bio, captura de leads, analytics de funil e seu painel de controle em tempo real."
     }
   ],
   demo: {
-    title: "Veja uma SmartBio sendo criada de verdade",
-    description: "O cliente aprova. A SmartBio publica. O link fica pronto para copiar. Tudo gerado automaticamente com base no seu onboarding."
+    title: "Veja como uma SmartBio é criada do zero",
+    description: "Você responde o onboarding. A SmartBio monta a estrutura. Você aprova o preview. O link fica pronto para a bio. Do zero ao publicado em uma única sessão."
   },
   onboarding: {
     title: "Captura, estrutura e gera. Em minutos.",
-    description: "A plataforma sugere estrutura, copy, perguntas e CTAs. A SmartBio organiza tudo em dados, ofertas e regras revisáveis antes da publicação.",
+    description: "A plataforma organiza suas informações em dados, ofertas e regras de recomendação. Tudo revisável antes da publicação.",
     question: "Qual é o principal objetivo da sua SmartBio?",
     options: [
       "Vender uma oferta",
@@ -73,27 +73,27 @@ export const landingData = {
   pricing: [
     {
       id: "plan_essential",
-      name: "Essencial",
-      description: "Perfeito para criadores começando",
+      name: "Presença",
+      description: "Para profissionais que querem uma bio com identidade e CTA direto.",
       priceLabel: "[PRICE_ESSENTIAL]",
       currency: "R$",
-      features: ["SmartBio publicada em slug", "Perfil público e links sociais", "CTA principal", "Leads básicos", "Analytics básico"]
+      features: ["SmartBio publicada em slug", "Perfil com identidade visual", "Links e redes sociais", "CTA principal", "Captura de leads simples"]
     },
     {
       id: "plan_intelligent",
-      name: "Inteligente",
-      description: "Para negócios em crescimento",
+      name: "Conversão",
+      description: "Para quem quer transformar visitas em clientes qualificados.",
       priceLabel: "[PRICE_INTELLIGENT]",
       currency: "R$",
-      features: ["Tudo do Essencial", "Onboarding guiado", "Quiz de diagnóstico", "Recomendação por regras", "Preview antes da publicação", "Leads qualificados"]
+      features: ["Tudo do Presença", "Onboarding guiado", "Diagnóstico com perguntas", "Recomendação personalizada por perfil", "Preview antes da publicação", "Leads qualificados"]
     },
     {
       id: "plan_premium",
-      name: "Premium",
-      description: "Para agências e grandes marcas",
+      name: "Escala",
+      description: "Para agências, equipes e marcas com volume e múltiplos fluxos.",
       priceLabel: "[PRICE_PREMIUM]",
       currency: "R$",
-      features: ["Tudo do Inteligente", "Agenda ou integração", "Analytics de funil", "CRM leve", "Suporte prioritário", "Templates e módulos avançados"]
+      features: ["Tudo do Conversão", "Agenda integrada", "Analytics de funil completo", "CRM leve com tags", "Suporte prioritário", "Templates por nicho e módulos avançados"]
     }
   ],
   faq: {
@@ -101,11 +101,15 @@ export const landingData = {
     items: [
       {
         question: "A SmartBio é só mais um link na bio?",
-        answer: "Não é um Linktree ou lista de botões. A SmartBio é uma jornada guiada focada em conversão, onde o visitante responde perguntas e recebe a recomendação certa."
+        answer: "Não é um Linktree ou lista de botões. A SmartBio é uma jornada de conversão: o visitante responde perguntas rápidas e recebe a recomendação certa para o perfil dele."
+      },
+      {
+        question: "Quanto tempo leva para publicar?",
+        answer: "Em média 20 a 30 minutos de onboarding. Depois é só aprovar o preview e copiar o link pronto."
       },
       {
         question: "Quem publica a página?",
-        answer: "O SaaS (SmartBio) publica a página automaticamente após a sua aprovação do preview. Você não precisa configurar hospedagem."
+        answer: "A SmartBio publica automaticamente após a sua aprovação do preview. Você não precisa configurar hospedagem nem mexer em código."
       },
       {
         question: "Preciso saber programar?",
@@ -117,20 +121,20 @@ export const landingData = {
       },
       {
         question: "Posso revisar antes de publicar?",
-        answer: "Sim. O fluxo obrigatório exige que você revise e aprove o preview antes da plataforma publicar no seu slug público."
+        answer: "Sim. O fluxo exige que você revise e aprove o preview antes da plataforma publicar no seu slug público."
       },
       {
         question: "Onde coloco o link publicado?",
-        answer: "Na bio do seu Instagram, TikTok, YouTube, LinkedIn, ou em qualquer campanha de marketing."
+        answer: "Na bio do Instagram, TikTok, YouTube, LinkedIn — ou em qualquer campanha de tráfego pago."
       },
       {
         question: "Posso usar WhatsApp, agenda, formulário ou checkout?",
-        answer: "Sim! A etapa final da recomendação pode direcionar o lead para qualquer um desses destinos de conversão."
+        answer: "Sim. A etapa final da recomendação pode direcionar o lead para qualquer um desses destinos de conversão."
       }
     ]
   },
   footer: {
-    cta: "Pronta para criar sua SmartBio?",
+    cta: "Sua próxima cliente pode estar chegando pela bio amanhã.",
     ctaButton: "Começar agora",
     links: ["Termos", "Privacidade", "Suporte"]
   },
@@ -152,29 +156,29 @@ export const mockUser: User = {
 export const mockPlans: Plan[] = [
   {
     id: 'plan_essential',
-    name: 'Essencial',
-    description: 'Perfeito para criadores começando',
+    name: 'Presença',
+    description: 'Para profissionais que querem uma bio com identidade e CTA direto.',
     priceLabel: '[PRICE_ESSENTIAL]',
     currency: 'BRL',
-    features: ['SmartBio publicada em slug', 'Perfil público e links sociais', 'CTA principal', 'Leads básicos', 'Analytics básico'],
+    features: ['SmartBio publicada em slug', 'Perfil com identidade visual', 'Links e redes sociais', 'CTA principal', 'Captura de leads simples'],
     stripePriceId: 'price_essential_test',
   },
   {
     id: 'plan_intelligent',
-    name: 'Inteligente',
-    description: 'Para negócios em crescimento',
+    name: 'Conversão',
+    description: 'Para quem quer transformar visitas em clientes qualificados.',
     priceLabel: '[PRICE_INTELLIGENT]',
     currency: 'BRL',
-    features: ['Tudo do Essencial', 'Onboarding guiado', 'Quiz de diagnóstico', 'Recomendação por regras', 'Preview antes da publicação', 'Leads qualificados'],
+    features: ['Tudo do Presença', 'Onboarding guiado', 'Diagnóstico com perguntas', 'Recomendação personalizada por perfil', 'Preview antes da publicação', 'Leads qualificados'],
     stripePriceId: 'price_intelligent_test',
   },
   {
     id: 'plan_premium',
-    name: 'Premium',
-    description: 'Para agências e grandes marcas',
+    name: 'Escala',
+    description: 'Para agências, equipes e marcas com volume e múltiplos fluxos.',
     priceLabel: '[PRICE_PREMIUM]',
     currency: 'BRL',
-    features: ['Tudo do Inteligente', 'Agenda ou integração', 'Analytics de funil', 'CRM leve', 'Suporte prioritário', 'Templates e módulos avançados'],
+    features: ['Tudo do Conversão', 'Agenda integrada', 'Analytics de funil completo', 'CRM leve com tags', 'Suporte prioritário', 'Templates por nicho e módulos avançados'],
     stripePriceId: 'price_premium_test',
   }
 ];
@@ -304,7 +308,7 @@ export const mockCreationFlowSteps = [
 
 export const mockSubscription = {
   planId: 'plan_intelligent',
-  planName: 'Inteligente',
+  planName: 'Conversão',
   status: 'active', // active, past_due, canceled
 };
 
