@@ -2,7 +2,7 @@ import { Sparkles, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface RecommendationPreviewProps {
-  previewData: {
+  previewData: null | {
     title: string;
     offerName: string;
     reason: string;
@@ -18,41 +18,44 @@ export function RecommendationPreview({ previewData }: RecommendationPreviewProp
         <Sparkles className="w-4 h-4 text-secondary-foreground" />
         <h3 className="font-bold text-ink font-heading text-sm">Preview da Recomendação</h3>
       </div>
-      
-      <div className="p-6 bg-background">
-        <p className="text-xs text-muted-foreground mb-4">Essa recomendação será exibida após o visitante concluir o diagnóstico.</p>
-        
-        {/* Mocked Recommendation Card */}
-        <div className="border border-border rounded-2xl p-5 bg-surface shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-3 text-secondary-foreground/10">
-            <Sparkles className="w-16 h-16" />
+
+      <div className="p-4 bg-background">
+        {!previewData ? (
+          <div className="text-center py-6 text-muted-foreground">
+            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-30" />
+            <p className="text-xs">Configure uma regra com oferta para ver o preview.</p>
           </div>
-          
-          <div className="relative z-10">
-            <span className="inline-block px-2 py-1 bg-success/20 text-success text-[10px] font-bold uppercase tracking-wider rounded-md mb-3">
-              {previewData.title}
-            </span>
-            
-            <h4 className="text-xl font-bold font-heading text-ink mb-2">{previewData.offerName}</h4>
-            <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-              {previewData.reason}
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground mb-4">
+              Essa recomendação será exibida após o visitante concluir o diagnóstico.
             </p>
-            
-            <div className="space-y-2 mb-6">
-              <p className="text-xs font-bold text-ink uppercase tracking-wider mb-2">Próximos Passos:</p>
-              {previewData.nextSteps.map((step, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                  {step}
+            <div className="border border-border rounded-2xl p-5 bg-surface shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-3 text-secondary-foreground/10">
+                <Sparkles className="w-16 h-16" />
+              </div>
+              <div className="relative z-10">
+                <span className="inline-block px-2 py-1 bg-success/20 text-success text-[10px] font-bold uppercase tracking-wider rounded-md mb-3">
+                  {previewData.title}
+                </span>
+                <h4 className="text-xl font-bold font-heading text-ink mb-2">{previewData.offerName}</h4>
+                <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{previewData.reason}</p>
+                <div className="space-y-2 mb-6">
+                  <p className="text-xs font-bold text-ink uppercase tracking-wider mb-2">Próximos Passos:</p>
+                  {previewData.nextSteps.map((step, i) => (
+                    <div key={i} className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                      {step}
+                    </div>
+                  ))}
                 </div>
-              ))}
+                <Button className="w-full bg-primary text-primary-foreground rounded-xl h-12 text-sm font-bold shadow-md shadow-primary/20">
+                  {previewData.buttonText} <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             </div>
-            
-            <Button className="w-full bg-primary text-primary-foreground rounded-xl h-12 text-sm font-bold shadow-md shadow-primary/20">
-              {previewData.buttonText} <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-        </div>
+          </>
+        )}
       </div>
     </div>
   );

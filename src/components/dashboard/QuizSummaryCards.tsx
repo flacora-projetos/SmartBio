@@ -1,16 +1,17 @@
 import { MessageSquare, CheckSquare, Zap, Link } from 'lucide-react';
-import { QuizQuestion, RecommendationRule } from '@/types';
+import type { DbQuestion } from '@/lib/quiz';
+import type { DbRule } from '@/lib/quiz';
 
 interface QuizSummaryCardsProps {
-  questions: QuizQuestion[];
-  rules: RecommendationRule[];
+  questions: DbQuestion[];
+  rules: DbRule[];
 }
 
 export function QuizSummaryCards({ questions, rules }: QuizSummaryCardsProps) {
-  const activeQuestions = questions.filter(q => q.status === 'active' || !q.status).length;
-  const configuredAnswers = questions.reduce((acc, q) => acc + (q.options?.length || 0), 0);
-  const activeRules = rules.filter(r => r.status === 'active' || r.isActive).length;
-  const connectedOffers = new Set(rules.map(r => r.recommendedOfferId || r.offerId)).size;
+  const activeQuestions = questions.filter(q => q.status === 'active').length;
+  const totalOptions = questions.reduce((acc, q) => acc + (q.options?.length ?? 0), 0);
+  const activeRules = rules.filter(r => r.status === 'active').length;
+  const connectedOffers = new Set(rules.map(r => r.recommended_offer_id).filter(Boolean)).size;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -21,13 +22,13 @@ export function QuizSummaryCards({ questions, rules }: QuizSummaryCardsProps) {
         </div>
         <p className="text-2xl font-bold text-ink font-heading">{activeQuestions}</p>
       </div>
-      
+
       <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
         <div className="flex items-center gap-3 text-muted-foreground mb-2">
           <CheckSquare className="w-5 h-5" />
           <h3 className="font-bold text-sm">Opções Configuradas</h3>
         </div>
-        <p className="text-2xl font-bold text-ink font-heading">{configuredAnswers}</p>
+        <p className="text-2xl font-bold text-ink font-heading">{totalOptions}</p>
       </div>
 
       <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
