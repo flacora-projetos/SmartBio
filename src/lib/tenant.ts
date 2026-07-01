@@ -42,28 +42,42 @@ export async function getOrCreateTenant(user: User): Promise<AppTenant> {
   const baseSlug = normalizeSlug(name) || 'minha-smartbio';
   const slug = `${baseSlug}-${user.id.slice(0, 8)}`;
 
-  const { data: tenant, error: insertTenantError } = await supabase
+  // Gera o ID no cliente para evitar o deadlock de RLS:
+  // INSERT ... RETURNING exige SELECT, mas o usuário ainda não está em
+  // tenant_members — então o RETURNING falha com policy violation.
+  // Solução: INSERT sem .select(), depois insere em tenant_members,
+  // e só então faz o SELECT (agora is_tenant_member já retorna true).
+  const tenantId = crypto.randomUUID();
+
+  const { error: insertTenantError } = await supabase
     .from('tenants')
     .insert({
+      id: tenantId,
       owner_id: user.id,
       name,
       slug,
       plan_key: 'essential',
-    })
-    .select('id, owner_id, name, slug, plan_key, is_active, trial_ends_at')
-    .single();
+    });
 
   if (insertTenantError) throw insertTenantError;
 
   const { error: memberError } = await supabase
     .from('tenant_members')
     .insert({
-      tenant_id: tenant.id,
+      tenant_id: tenantId,
       user_id: user.id,
       role: 'owner',
     });
 
   if (memberError) throw memberError;
 
-  return tenant as AppTenant;
+  // SELECT agora funciona: is_tenant_member(tenantId) retorna true
+  const { data: newTenant, error: refetchError } = await supabase
+    .from('tenants')
+    .select('id, owner_id, name, slug, plan_key, is_active, trial_ends_at')
+    .eq('id', tenantId)
+    .single();
+
+  if (refetchError) throw refetchError;
+  return newTenant as AppTenant;
 }
