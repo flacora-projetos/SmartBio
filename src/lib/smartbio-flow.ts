@@ -72,6 +72,19 @@ function slugFromTenant(tenant: AppTenant) {
   return tenant.slug || `smartbio-${tenant.id.slice(0, 8)}`;
 }
 
+function slugFromBrandName(name: string): string {
+  const base = name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 50);
+  return base || 'smartbio';
+}
+
 export async function getOrCreateWorkspaceSmartBio(tenant: AppTenant): Promise<WorkspaceSmartBio> {
   const { data: existing, error: selectError } = await supabase
     .from('smartbios')
@@ -418,10 +431,13 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
     if (ruleUpdateError) throw ruleUpdateError;
   }
 
+  const newSlug = slugFromBrandName(brandName);
+
   const { error: smartbioError } = await supabase
     .from('smartbios')
     .update({
       title: brandName,
+      slug: newSlug,
       short_bio: shortBio,
       status: 'preview_pending_approval',
       public_config: {
@@ -440,6 +456,32 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
     .eq('id', smartbio.id);
 
   if (smartbioError) throw smartbioError;
+}
+
+export async function resetSmartBio(tenant: AppTenant): Promise<void> {
+  const smartbio = await getOrCreateWorkspaceSmartBio(tenant);
+
+  await Promise.all([
+    supabase.from('offers').delete().eq('tenant_id', tenant.id),
+    supabase.from('quiz_questions').delete().eq('tenant_id', tenant.id),
+    supabase.from('recommendation_rules').delete().eq('tenant_id', tenant.id),
+    supabase.from('smartbio_assets').delete().eq('tenant_id', tenant.id),
+    supabase.from('onboarding_answers').delete().eq('tenant_id', tenant.id),
+  ]);
+
+  await supabase
+    .from('smartbios')
+    .update({
+      status: 'draft',
+      short_bio: null,
+      public_config: {},
+      theme_config: { tone: 'clean', accent: '#0A0A0A' },
+      tracking_config: {},
+      published_at: null,
+    })
+    .eq('id', smartbio.id);
+
+  try { localStorage.removeItem('smartbio_onboarding_draft'); } catch {}
 }
 
 export async function publishWorkspaceSmartBio(smartbioId: string) {
