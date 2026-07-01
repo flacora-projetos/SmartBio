@@ -6,7 +6,10 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
   const location = useLocation();
   const { user, isLoading } = useAuth();
 
-  if (isLoading) {
+  // Loading spinner apenas na carga inicial (usuário ainda desconhecido).
+  // Se o usuário já está logado, renderiza a página mesmo durante re-carregamentos
+  // em background — evita desmontar o componente e resetar state de formulários.
+  if (isLoading && !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
