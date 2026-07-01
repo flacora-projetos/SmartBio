@@ -13,6 +13,7 @@ export type WorkspaceSmartBio = {
   theme_config: Record<string, unknown>;
   tracking_config: Record<string, unknown>;
   published_at: string | null;
+  social_links: Record<string, string>;
 };
 
 export type WorkspaceReadiness = {
@@ -105,7 +106,7 @@ function slugFromBrandName(name: string): string {
 export async function getOrCreateWorkspaceSmartBio(tenant: AppTenant): Promise<WorkspaceSmartBio> {
   const { data: existing, error: selectError } = await supabase
     .from('smartbios')
-    .select('id, tenant_id, title, slug, short_bio, status, public_config, theme_config, tracking_config, published_at')
+    .select('id, tenant_id, title, slug, short_bio, status, public_config, theme_config, tracking_config, published_at, social_links')
     .eq('tenant_id', tenant.id)
     .order('created_at', { ascending: true })
     .limit(1)
@@ -125,7 +126,7 @@ export async function getOrCreateWorkspaceSmartBio(tenant: AppTenant): Promise<W
       public_config: {},
       theme_config: { tone: 'clean', accent: '#0A0A0A' },
     })
-    .select('id, tenant_id, title, slug, short_bio, status, public_config, theme_config, tracking_config, published_at')
+    .select('id, tenant_id, title, slug, short_bio, status, public_config, theme_config, tracking_config, published_at, social_links')
     .single();
 
   if (insertError) throw insertError;
@@ -178,8 +179,8 @@ export async function readWorkspaceState(tenant: AppTenant): Promise<WorkspaceSt
       title: smartbio.title,
       bio: smartbio.short_bio,
       theme: 'light',
-      avatarUrl: null,
-      socialLinks: {},
+      avatarUrl: (smartbio.public_config?.avatarUrl as string | null) ?? null,
+      socialLinks: smartbio.social_links ?? {},
       offers: [],
       quizQuestions: [],
     },
