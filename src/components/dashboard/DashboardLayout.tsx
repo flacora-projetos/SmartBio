@@ -71,13 +71,15 @@ function NavLink({
 function LockedNavItem({
   icon: Icon,
   label,
+  title = 'Disponível após a publicação da sua SmartBio',
 }: {
   icon: React.ElementType;
   label: string;
+  title?: string;
 }) {
   return (
     <div
-      title="Disponível após a publicação da sua SmartBio"
+      title={title}
       className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-muted-foreground/50 cursor-not-allowed select-none"
     >
       <Icon className="w-4 h-4 shrink-0" />
@@ -113,6 +115,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
     tenant?.plan_key === 'essential' ? 'Essencial' : mockSubscription.planName;
 
   const isPublished = publishStatus === 'published';
+  const isDraft = publishStatus === 'draft' || publishStatus === null;
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -173,15 +176,28 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
           )}
         </SectionLabel>
 
-        {smartbioItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            icon={item.icon}
-            label={item.label}
-            active={location.pathname === item.path}
-          />
-        ))}
+        {smartbioItems.map((item) => {
+          const isOnboarding = item.path === '/app/onboarding';
+          if (isDraft && !isOnboarding) {
+            return (
+              <LockedNavItem
+                key={item.path}
+                icon={item.icon}
+                label={item.label}
+                title="Conclua o onboarding guiado primeiro"
+              />
+            );
+          }
+          return (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              icon={item.icon}
+              label={item.label}
+              active={location.pathname === item.path}
+            />
+          );
+        })}
 
         {/* Seção Resultados */}
         <SectionLabel>Resultados</SectionLabel>
