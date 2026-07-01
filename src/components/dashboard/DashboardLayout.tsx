@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { mockSubscription } from '@/data/mock';
+import { TrialBanner } from '@/components/dashboard/TrialBanner';
 import { Button } from '@/components/ui/button';
 import {
   LayoutDashboard,
@@ -293,6 +294,8 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
             )}
           </div>
         </header>
+
+        <TrialBanner />
 
         {/* Conteúdo da página */}
         <div className="flex-1 p-4 md:p-8 overflow-y-auto">

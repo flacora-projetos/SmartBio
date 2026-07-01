@@ -8,6 +8,7 @@ export type AppTenant = {
   slug: string;
   plan_key: string;
   is_active: boolean;
+  trial_ends_at: string | null;
 };
 
 function normalizeSlug(value: string) {
@@ -30,7 +31,7 @@ export function tenantNameFromUser(user: User) {
 export async function getOrCreateTenant(user: User): Promise<AppTenant> {
   const { data: existingTenant, error: selectError } = await supabase
     .from('tenants')
-    .select('id, owner_id, name, slug, plan_key, is_active')
+    .select('id, owner_id, name, slug, plan_key, is_active, trial_ends_at')
     .limit(1)
     .maybeSingle();
 
@@ -49,7 +50,7 @@ export async function getOrCreateTenant(user: User): Promise<AppTenant> {
       slug,
       plan_key: 'essential',
     })
-    .select('id, owner_id, name, slug, plan_key, is_active')
+    .select('id, owner_id, name, slug, plan_key, is_active, trial_ends_at')
     .single();
 
   if (insertTenantError) throw insertTenantError;

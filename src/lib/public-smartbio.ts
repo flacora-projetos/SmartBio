@@ -44,7 +44,12 @@ export type PublicPageData = {
   rules: PublicRule[];
 };
 
-export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | null> {
+export type PausedPageData = {
+  paused: true;
+  title: string;
+};
+
+export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | PausedPageData | null> {
   const { data: smartbio, error } = await supabase
     .from('smartbios')
     .select('id, tenant_id, title, short_bio, slug, public_config, theme_config')
@@ -53,6 +58,15 @@ export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData 
     .maybeSingle();
 
   if (error || !smartbio) return null;
+
+  // Verifica se o tenant ainda tem acesso (trial ativo ou assinatura)
+  const { data: accessible } = await supabase.rpc('check_smartbio_access', {
+    p_tenant_id: smartbio.tenant_id,
+  });
+
+  if (!accessible) {
+    return { paused: true, title: smartbio.title };
+  }
 
   const [offersRes, questionsRes, rulesRes] = await Promise.all([
     supabase

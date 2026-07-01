@@ -10,6 +10,7 @@ alter table public.offers
 --    completamente a página pública /s/:slug para visitantes reais.
 
 drop policy if exists "offers_select_members" on public.offers;
+drop policy if exists "offers_select" on public.offers;
 create policy "offers_select" on public.offers
   for select using (
     public.is_tenant_member(tenant_id)
@@ -21,6 +22,7 @@ create policy "offers_select" on public.offers
   );
 
 drop policy if exists "quiz_questions_select_members" on public.quiz_questions;
+drop policy if exists "quiz_questions_select" on public.quiz_questions;
 create policy "quiz_questions_select" on public.quiz_questions
   for select using (
     public.is_tenant_member(tenant_id)
@@ -32,6 +34,7 @@ create policy "quiz_questions_select" on public.quiz_questions
   );
 
 drop policy if exists "recommendation_rules_select_members" on public.recommendation_rules;
+drop policy if exists "recommendation_rules_select" on public.recommendation_rules;
 create policy "recommendation_rules_select" on public.recommendation_rules
   for select using (
     public.is_tenant_member(tenant_id)

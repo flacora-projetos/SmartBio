@@ -9,6 +9,8 @@ type AuthContextValue = {
   user: User | null;
   tenant: AppTenant | null;
   isLoading: boolean;
+  trialDaysLeft: number | null;
+  isTrialExpired: boolean;
   signOut: () => Promise<void>;
   refreshTenant: () => Promise<void>;
 };
@@ -74,18 +76,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const trialDaysLeft = useMemo<number | null>(() => {
+    if (!tenant?.trial_ends_at) return null;
+    const ms = new Date(tenant.trial_ends_at).getTime() - Date.now();
+    return Math.max(0, Math.ceil(ms / 86_400_000));
+  }, [tenant?.trial_ends_at]);
+
+  const isTrialExpired = trialDaysLeft !== null && trialDaysLeft === 0;
+
   const value = useMemo<AuthContextValue>(() => ({
     session,
     user: session?.user ?? null,
     tenant,
     isLoading,
+    trialDaysLeft,
+    isTrialExpired,
     signOut: async () => {
       await supabase.auth.signOut();
       setSession(null);
       setTenant(null);
     },
     refreshTenant,
-  }), [session, tenant, isLoading]);
+  }), [session, tenant, isLoading, trialDaysLeft, isTrialExpired]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

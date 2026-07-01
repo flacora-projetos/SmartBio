@@ -16,12 +16,13 @@ import {
   type PublicRule,
 } from '@/lib/public-smartbio';
 
-type PageState = 'loading' | 'not_found' | 'start' | 'quiz' | 'result';
+type PageState = 'loading' | 'not_found' | 'paused' | 'start' | 'quiz' | 'result';
 
 export function SmartBioPage() {
   const { slug } = useParams<{ slug: string }>();
   const [pageState, setPageState] = useState<PageState>('loading');
   const [pageData, setPageData] = useState<PublicPageData | null>(null);
+  const [pausedTitle, setPausedTitle] = useState<string>('');
   const [matchedOffer, setMatchedOffer] = useState<PublicOffer | null>(null);
   const [matchedRule, setMatchedRule] = useState<PublicRule | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
@@ -31,6 +32,11 @@ export function SmartBioPage() {
 
     fetchPublicSmartBio(slug).then(data => {
       if (!data) { setPageState('not_found'); return; }
+      if ('paused' in data) {
+        setPausedTitle(data.title);
+        setPageState('paused');
+        return;
+      }
       setPageData(data);
       setPageState('start');
       trackEvent(data.smartbio.tenant_id, data.smartbio.id, 'page_view', { slug });
@@ -108,6 +114,32 @@ export function SmartBioPage() {
           <p className="text-sm text-muted-foreground">
             Esta SmartBio não existe ou ainda não foi publicada.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Pausada (trial expirado) ──────────────────────────────────────────────
+  if (pageState === 'paused') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="text-center flex flex-col items-center gap-5 max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">SB</div>
+          </div>
+          {pausedTitle && (
+            <p className="text-sm font-semibold text-muted-foreground">{pausedTitle}</p>
+          )}
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold font-heading text-ink">SmartBio pausada</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              O período de trial desta página encerrou.<br />
+              Se você é o dono, acesse o painel para reativar.
+            </p>
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50 mt-4">
+            Criado com SmartBio
+          </div>
         </div>
       </div>
     );
