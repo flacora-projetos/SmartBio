@@ -1,60 +1,82 @@
-import { Sparkles, ArrowRight, Calendar, MessageSquare, CheckSquare, Link as LinkIcon } from 'lucide-react';
+import { Sparkles, MessageSquare, Calendar, CheckSquare, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import type { PublicOffer, PublicRule } from '@/lib/public-smartbio';
 
 interface RecommendationResultProps {
-  title: string;
-  offerName: string;
-  reason: string;
-  nextSteps: string[];
-  buttonText: string;
-  finalCta: string; // whatsapp, agenda, formulario, checkout, etc
+  offer: PublicOffer;
+  rule: PublicRule | null;
+  onCtaClick: () => void;
 }
 
-export function RecommendationResult({ title, offerName, reason, nextSteps, buttonText, finalCta }: RecommendationResultProps) {
-  const getIcon = () => {
-    switch (finalCta) {
-      case 'whatsapp': return <MessageSquare className="w-5 h-5 mr-2" />;
-      case 'agenda': return <Calendar className="w-5 h-5 mr-2" />;
-      case 'formulario': return <CheckSquare className="w-5 h-5 mr-2" />;
-      default: return <LinkIcon className="w-5 h-5 mr-2" />;
-    }
-  };
+function CtaIcon({ type }: { type: string | null }) {
+  switch (type) {
+    case 'whatsapp': return <MessageSquare className="w-5 h-5 mr-2 shrink-0" />;
+    case 'agenda':   return <Calendar className="w-5 h-5 mr-2 shrink-0" />;
+    case 'formulario': return <CheckSquare className="w-5 h-5 mr-2 shrink-0" />;
+    default:         return <ExternalLink className="w-5 h-5 mr-2 shrink-0" />;
+  }
+}
+
+export function RecommendationResult({ offer, rule, onCtaClick }: RecommendationResultProps) {
+  const reason = rule?.recommendation_reason
+    ?? `${offer.title} parece o melhor próximo passo para o seu momento atual.`;
+  const buttonText = rule?.final_cta ?? offer.recommended_cta ?? 'Quero esse';
 
   return (
-    <div className="border-2 border-primary rounded-3xl p-6 bg-surface shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-500">
-      <div className="absolute top-0 right-0 p-4 text-primary/10">
-        <Sparkles className="w-24 h-24" />
-      </div>
-      
-      <div className="relative z-10">
-        <div className="inline-flex items-center justify-center px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-lg mb-4">
-          <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-          {title}
+    <div className="border-2 border-primary rounded-3xl overflow-hidden bg-surface shadow-2xl animate-in fade-in zoom-in-95 duration-500">
+      {offer.image_url && (
+        <div className="w-full h-44 overflow-hidden">
+          <img
+            src={offer.image_url}
+            alt={offer.title}
+            className="w-full h-full object-cover"
+          />
         </div>
-        
-        <h3 className="text-2xl font-bold font-heading text-ink mb-3 pr-8">{offerName}</h3>
-        <p className="text-base text-muted-foreground mb-6 leading-relaxed">
-          {reason}
-        </p>
-        
-        <div className="bg-background border border-border rounded-2xl p-4 mb-6">
-          <p className="text-xs font-bold text-ink uppercase tracking-wider mb-3">Próximos Passos</p>
-          <div className="space-y-3">
-            {nextSteps.map((step, i) => (
-              <div key={i} className="flex items-start gap-3 text-sm text-muted-foreground">
-                <div className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-[10px] font-bold">{i + 1}</span>
-                </div>
-                <span className="pt-0.5 leading-snug">{step}</span>
-              </div>
-            ))}
+      )}
+
+      <div className="p-6 relative">
+        <div className="absolute top-4 right-4 text-primary/10 pointer-events-none">
+          <Sparkles className="w-20 h-20" />
+        </div>
+
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-lg mb-4">
+            <Sparkles className="w-3.5 h-3.5" />
+            Indicação ideal
           </div>
+
+          <h3 className="text-2xl font-bold font-heading text-ink mb-2 pr-6">
+            {offer.title}
+          </h3>
+
+          {offer.price_label && (
+            <p className="text-lg font-bold text-primary mb-3">{offer.price_label}</p>
+          )}
+
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">{reason}</p>
+
+          {offer.description && (
+            <div className="bg-background border border-border rounded-2xl p-4 mb-6 text-sm text-muted-foreground leading-relaxed">
+              {offer.description}
+            </div>
+          )}
+
+          <Button
+            onClick={onCtaClick}
+            className="w-full bg-primary text-primary-foreground rounded-xl h-14 text-base font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+          >
+            <CtaIcon type={offer.recommended_cta} />
+            {buttonText}
+          </Button>
+
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="w-full mt-4 text-xs text-muted-foreground hover:text-ink transition-colors text-center"
+          >
+            ← Voltar ao início
+          </button>
         </div>
-        
-        <Button className="w-full bg-primary text-primary-foreground rounded-xl h-14 text-base font-bold shadow-xl shadow-primary/20 hover:scale-[1.02] transition-transform">
-          {getIcon()}
-          {buttonText} 
-        </Button>
       </div>
     </div>
   );

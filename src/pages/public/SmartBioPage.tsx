@@ -1,85 +1,183 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { mockPublicSmartBioData, mockRecommendationPreview, mockRecommendationRules } from '@/data/mock';
+import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { PublicSmartBioHeader } from '@/components/public/PublicSmartBioHeader';
 import { QuizFlowMock } from '@/components/public/QuizFlowMock';
 import { RecommendationResult } from '@/components/public/RecommendationResult';
-import { Sparkles, ArrowRight } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  fetchPublicSmartBio,
+  findMatchingRule,
+  buildCtaUrl,
+  trackEvent,
+  insertLead,
+  type PublicPageData,
+  type PublicOffer,
+  type PublicRule,
+} from '@/lib/public-smartbio';
+
+type PageState = 'loading' | 'not_found' | 'start' | 'quiz' | 'result';
 
 export function SmartBioPage() {
-  const { slug } = useParams();
-  const [flowState, setFlowState] = useState<'start' | 'quiz' | 'result'>('start');
-  
-  const data = mockPublicSmartBioData;
-  const questions = data.quizQuestions || [];
-  
-  // Find the active rule to get the finalCta type
-  const activeRule = mockRecommendationRules[0];
-  const finalCta = activeRule?.finalCta || 'whatsapp';
+  const { slug } = useParams<{ slug: string }>();
+  const [pageState, setPageState] = useState<PageState>('loading');
+  const [pageData, setPageData] = useState<PublicPageData | null>(null);
+  const [matchedOffer, setMatchedOffer] = useState<PublicOffer | null>(null);
+  const [matchedRule, setMatchedRule] = useState<PublicRule | null>(null);
+  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!slug) { setPageState('not_found'); return; }
+
+    fetchPublicSmartBio(slug).then(data => {
+      if (!data) { setPageState('not_found'); return; }
+      setPageData(data);
+      setPageState('start');
+      trackEvent(data.smartbio.tenant_id, data.smartbio.id, 'page_view', { slug });
+    });
+  }, [slug]);
+
+  const handleStartQuiz = () => {
+    if (!pageData) return;
+    setPageState('quiz');
+    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
+  };
+
+  const handleQuizComplete = (answers: string[]) => {
+    if (!pageData) return;
+    setQuizAnswers(answers);
+
+    const rule = findMatchingRule(pageData.rules, answers);
+    const offer = rule?.recommended_offer_id
+      ? pageData.offers.find(o => o.id === rule.recommended_offer_id) ?? pageData.offers[0]
+      : pageData.offers[0];
+
+    setMatchedRule(rule);
+    setMatchedOffer(offer ?? null);
+    setPageState('result');
+
+    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_complete', {
+      answers,
+      matched_rule_id: rule?.id ?? null,
+      matched_offer_id: offer?.id ?? null,
+    });
+  };
+
+  const handleCtaClick = () => {
+    if (!pageData || !matchedOffer) return;
+
+    const destination = buildCtaUrl(matchedOffer.recommended_cta, matchedOffer.cta_destination);
+
+    insertLead(
+      pageData.smartbio.tenant_id,
+      pageData.smartbio.id,
+      matchedOffer.id,
+      quizAnswers,
+      matchedOffer.recommended_cta ?? 'url'
+    );
+    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'cta_click', {
+      offer_id: matchedOffer.id,
+      destination,
+    });
+
+    if (destination !== '#') window.open(destination, '_blank', 'noopener,noreferrer');
+  };
+
+  const diagnosticTitle =
+    (pageData?.smartbio.public_config?.diagnosticTitle as string | undefined) ??
+    'Descubra o próximo passo ideal';
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center">
-      {/* Background decoration */}
-      <div className="fixed inset-0 pointer-events-none flex justify-center overflow-hidden">
-        <div className="w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl absolute -top-[400px] -z-10" />
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl absolute -top-[300px] left-1/2 -translate-x-1/2 -z-10" />
       </div>
 
       <div className="w-full max-w-[480px] min-h-screen flex flex-col relative z-10 shadow-2xl bg-surface sm:border-x sm:border-border">
-        
-        <PublicSmartBioHeader data={data} />
-        
-        <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto hide-scrollbar pb-24">
-          
-          {flowState === 'start' && (
-            <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="bg-background border border-border p-6 rounded-3xl text-center shadow-sm">
-                <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
-                  <Sparkles className="w-6 h-6" />
+
+        {/* Loading */}
+        {pageState === 'loading' && (
+          <div className="flex-1 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        )}
+
+        {/* Não encontrado */}
+        {pageState === 'not_found' && (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-bold font-heading text-ink">Página não encontrada</h2>
+            <p className="text-sm text-muted-foreground">
+              Esta SmartBio não existe ou ainda não foi publicada.
+            </p>
+          </div>
+        )}
+
+        {/* Conteúdo principal */}
+        {pageData && pageState !== 'loading' && pageState !== 'not_found' && (
+          <>
+            <PublicSmartBioHeader smartbio={pageData.smartbio} />
+
+            <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto pb-24">
+
+              {pageState === 'start' && (
+                <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="bg-background border border-border p-6 rounded-3xl text-center shadow-sm">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                      <Sparkles className="w-6 h-6" />
+                    </div>
+                    <h2 className="text-xl font-bold font-heading text-ink mb-3">
+                      {diagnosticTitle}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Responda algumas perguntas rápidas e receba uma recomendação personalizada.
+                    </p>
+                    <Button
+                      onClick={handleStartQuiz}
+                      className="w-full bg-primary text-primary-foreground rounded-xl h-12 font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+                    >
+                      Começar Diagnóstico <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  </div>
+
+                  {pageData.offers.length > 0 && (
+                    <p className="text-center text-xs text-muted-foreground mt-6">
+                      {pageData.offers.length} opção{pageData.offers.length > 1 ? 'ões' : ''} disponível{pageData.offers.length > 1 ? 'eis' : ''}
+                    </p>
+                  )}
                 </div>
-                <h2 className="text-xl font-bold font-heading text-ink mb-3">Descubra o próximo passo ideal</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Responda algumas perguntas rápidas para receber uma recomendação personalizada.
-                </p>
-                <Button 
-                  onClick={() => setFlowState('quiz')}
-                  className="w-full bg-primary text-primary-foreground rounded-xl h-12 font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-                >
-                  Começar Diagnóstico <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </div>
+              )}
+
+              {pageState === 'quiz' && pageData.questions.length > 0 && (
+                <div className="flex-1 flex flex-col justify-center">
+                  <QuizFlowMock
+                    questions={pageData.questions}
+                    onComplete={handleQuizComplete}
+                  />
+                </div>
+              )}
+
+              {pageState === 'result' && matchedOffer && (
+                <div className="flex-1 flex flex-col justify-center">
+                  <RecommendationResult
+                    offer={matchedOffer}
+                    rule={matchedRule}
+                    onCtaClick={handleCtaClick}
+                  />
+                </div>
+              )}
+
             </div>
-          )}
 
-          {flowState === 'quiz' && (
-            <div className="flex-1 flex flex-col justify-center">
-               <QuizFlowMock 
-                 questions={questions} 
-                 onComplete={() => setFlowState('result')} 
-               />
+            <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-surface via-surface to-transparent flex justify-center pb-6 pointer-events-none">
+              <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
+                Criado com SmartBio
+              </span>
             </div>
-          )}
-
-          {flowState === 'result' && (
-            <div className="flex-1 flex flex-col justify-center">
-              <RecommendationResult 
-                title={mockRecommendationPreview.title}
-                offerName={mockRecommendationPreview.offerName}
-                reason={mockRecommendationPreview.reason}
-                nextSteps={mockRecommendationPreview.nextSteps}
-                buttonText={mockRecommendationPreview.buttonText}
-                finalCta={finalCta}
-              />
-            </div>
-          )}
-
-        </div>
-
-        <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-surface via-surface to-transparent flex justify-center pb-6">
-          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-            Criado com SmartBio
-          </span>
-        </div>
+          </>
+        )}
 
       </div>
     </div>
