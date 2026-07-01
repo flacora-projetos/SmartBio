@@ -1,11 +1,9 @@
+import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { 
-  mockSmartBio, 
-  mockCreationFlowSteps, 
   mockDashboardMetrics,
   mockSubscription,
-  dashboardData,
-  mockTenant
+  dashboardData
 } from '@/data/mock';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -21,11 +19,63 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { readWorkspaceState, type WorkspaceState } from '@/lib/smartbio-flow';
+import type { SmartBioStatus } from '@/types';
 
 export function Overview() {
+  const { tenant } = useAuth();
+  const [workspace, setWorkspace] = useState<WorkspaceState | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadWorkspace() {
+      if (!tenant) return;
+
+      try {
+        setIsLoading(true);
+        setErrorMessage(null);
+        const nextWorkspace = await readWorkspaceState(tenant);
+        if (isMounted) setWorkspace(nextWorkspace);
+      } catch (error) {
+        console.error(error);
+        if (isMounted) setErrorMessage('Nao foi possivel carregar o progresso da SmartBio.');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    loadWorkspace();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [tenant]);
+
+  const status: SmartBioStatus = workspace?.status ?? 'onboarding_pending';
+
+  const creationFlowSteps = useMemo(() => {
+    const readiness = workspace?.readiness;
+    return [
+      { step: 1, title: 'Conta criada', status: 'complete' },
+      { step: 2, title: 'Onboarding IA', status: readiness?.hasIdentity ? 'complete' : 'current' },
+      { step: 3, title: 'Ofertas estruturadas', status: readiness?.hasOffers ? 'complete' : readiness?.hasIdentity ? 'current' : 'pending' },
+      { step: 4, title: 'Quiz configurado', status: readiness?.hasQuiz ? 'complete' : readiness?.hasOffers ? 'current' : 'pending' },
+      { step: 5, title: 'Regras de recomendacao', status: readiness?.hasRules ? 'complete' : readiness?.hasQuiz ? 'current' : 'pending' },
+      { step: 6, title: 'Preview gerado', status: readiness?.hasPreview ? 'complete' : readiness?.hasRules ? 'current' : 'pending' },
+      { step: 7, title: 'Aprovacao do cliente', status: status === 'published' ? 'complete' : readiness?.canApprove ? 'current' : 'pending' },
+      { step: 8, title: 'Publicacao automatica', status: status === 'published' ? 'complete' : 'pending' },
+      { step: 9, title: 'Link pronto para copiar', status: status === 'published' ? 'complete' : 'pending' },
+    ];
+  }, [workspace, status]);
+
   const getStatusBadge = () => {
-    switch(mockSmartBio.status) {
+    switch(status) {
       case 'onboarding_pending':
+      case 'draft':
         return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-secondary text-secondary-foreground"><Circle className="w-4 h-4" /> {dashboardData.overview.statusCard.badges.onboarding_pending}</span>;
       case 'generating':
         return <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-primary/20 text-primary"><Sparkles className="w-4 h-4" /> {dashboardData.overview.statusCard.badges.generating}</span>;
@@ -37,8 +87,9 @@ export function Overview() {
   };
 
   const getActionContent = () => {
-    switch(mockSmartBio.status) {
+    switch(status) {
       case 'onboarding_pending':
+      case 'draft':
         return (
           <Link to="/app/onboarding" className={cn(buttonVariants({ variant: "default" }), "w-full sm:w-auto bg-primary text-primary-foreground rounded-xl")}>
             {dashboardData.overview.statusCard.actions.continueOnboarding} <ArrowRight className="w-4 h-4 ml-2" />
@@ -71,7 +122,14 @@ export function Overview() {
         <div>
           <h1 className="text-2xl font-heading font-bold text-ink">{dashboardData.overview.title}</h1>
           <p className="text-muted-foreground text-sm mt-1">{dashboardData.overview.subtitle}</p>
+          {errorMessage && <p className="text-destructive text-sm mt-2">{errorMessage}</p>}
         </div>
+
+        {isLoading && (
+          <div className="bg-surface border border-border p-6 rounded-2xl shadow-sm text-sm text-muted-foreground">
+            Carregando progresso real da sua SmartBio...
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Status & Next Action */}
@@ -95,7 +153,7 @@ export function Overview() {
             <div className="bg-surface border border-border p-6 rounded-2xl shadow-sm">
               <h2 className="text-lg font-bold text-ink mb-6">{dashboardData.overview.flowCard.title}</h2>
               <div className="space-y-4">
-                {mockCreationFlowSteps.map((step, index) => (
+                {creationFlowSteps.map((step, index) => (
                   <div key={index} className="flex items-center gap-4">
                     <div className="flex flex-col items-center">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border-2 ${
@@ -105,11 +163,11 @@ export function Overview() {
                       }`}>
                         {step.status === 'complete' ? <CheckCircle2 className="w-4 h-4" /> : <span className="text-xs font-bold">{step.step}</span>}
                       </div>
-                      {index < mockCreationFlowSteps.length - 1 && (
+                      {index < creationFlowSteps.length - 1 && (
                         <div className={`w-0.5 h-6 my-1 ${step.status === 'complete' ? 'bg-success/40' : 'bg-border'}`} />
                       )}
                     </div>
-                    <div className={`flex-1 mb-${index < mockCreationFlowSteps.length - 1 ? '7' : '0'}`}>
+                    <div className={cn('flex-1', index < creationFlowSteps.length - 1 ? 'mb-7' : 'mb-0')}>
                       <p className={`font-medium ${
                         step.status === 'complete' ? 'text-ink' :
                         step.status === 'current' ? 'text-primary font-bold' :
@@ -147,10 +205,10 @@ export function Overview() {
             {/* Public Link Card */}
             <div className="bg-surface border border-border p-6 rounded-2xl shadow-sm">
               <h2 className="text-sm font-bold text-ink mb-4 uppercase tracking-wider">{dashboardData.overview.publicLinkCard.title}</h2>
-              {mockSmartBio.status === 'published' ? (
+              {status === 'published' && workspace ? (
                 <div className="space-y-3">
                   <div className="bg-background border border-border px-3 py-2 rounded-lg text-sm text-ink truncate font-mono">
-                    smartbio.app/s/{mockTenant.slug}
+                    {workspace.publicUrl}
                   </div>
                   <div className="flex gap-2">
                     <Button className="flex-1 bg-ink text-surface hover:bg-ink/90 rounded-lg text-xs" size="sm">
@@ -178,14 +236,20 @@ export function Overview() {
               
               <div className="relative mx-auto" style={{ maxWidth: '280px' }}>
                  <div className="transform scale-[0.8] origin-top">
-                    <SmartBioPreviewMock />
+                    <SmartBioPreviewMock data={workspace?.previewData} />
                  </div>
               </div>
               
               <div className="mt-[-80px] space-y-2 relative z-10 flex flex-col">
-                <Link to="/app/preview" className={cn(buttonVariants({ variant: "default" }), "w-full bg-primary text-primary-foreground rounded-xl")}>
-                  <Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.previewCard.viewFull}
-                </Link>
+                {workspace?.readiness.canApprove ? (
+                  <Link to="/app/preview" className={cn(buttonVariants({ variant: "default" }), "w-full bg-primary text-primary-foreground rounded-xl")}>
+                    <Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.previewCard.viewFull}
+                  </Link>
+                ) : (
+                  <Link to="/app/onboarding" className={cn(buttonVariants({ variant: "default" }), "w-full bg-primary text-primary-foreground rounded-xl")}>
+                    <Sparkles className="w-4 h-4 mr-2" /> Continuar onboarding
+                  </Link>
+                )}
                 <Link to="/app/onboarding" className={cn(buttonVariants({ variant: "outline" }), "w-full rounded-xl")}>
                   {dashboardData.overview.previewCard.continueConfig}
                 </Link>

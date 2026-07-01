@@ -19,6 +19,7 @@ export type Tenant = {
 };
 
 export type SmartBioStatus = 
+  | "draft"
   | "onboarding_pending"
   | "generating"
   | "preview_pending_approval"

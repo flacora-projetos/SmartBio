@@ -11,9 +11,9 @@ export function Footer() {
         
         <nav className="flex items-center gap-8">
           {landingData.footer.links.map((link, i) => (
-            <a key={i} href="#" className="text-sm text-white/70 hover:text-white transition-colors">
+            <span key={i} className="text-sm text-white/40 cursor-default select-none">
               {link}
-            </a>
+            </span>
           ))}
         </nav>
         

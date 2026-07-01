@@ -1,6 +1,7 @@
 import { landingData } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function PricingCards() {
   return (
@@ -42,10 +43,11 @@ export function PricingCards() {
                     </li>
                   ))}
                 </ul>
-                <Button 
+                <Button
+                  asChild
                   className={`w-full rounded-full h-12 ${isPopular ? 'bg-secondary text-secondary-foreground hover:bg-secondary/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}
                 >
-                  Começar com {plan.name}
+                  <Link to="/signup">Começar com {plan.name}</Link>
                 </Button>
               </div>
             );

@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+credenciais.md
+credeciais.md
+credentials.md
+secrets.md

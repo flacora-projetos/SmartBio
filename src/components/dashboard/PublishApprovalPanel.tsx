@@ -7,9 +7,10 @@ interface PublishApprovalPanelProps {
   onApprove: () => void;
   onCopyLink: () => void;
   onOpenLink?: () => void;
+  canApprove?: boolean;
 }
 
-export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink, onOpenLink }: PublishApprovalPanelProps) {
+export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink, onOpenLink, canApprove = true }: PublishApprovalPanelProps) {
   return (
     <div className="bg-surface border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-6">
       <div>
@@ -32,7 +33,7 @@ export function PublishApprovalPanel({ status, publicUrl, onApprove, onCopyLink,
 
       <div className="flex flex-col gap-3">
         {status === 'pending' && (
-          <Button onClick={onApprove} className="w-full rounded-xl bg-primary text-primary-foreground font-bold h-12">
+          <Button onClick={onApprove} disabled={!canApprove} className="w-full rounded-xl bg-primary text-primary-foreground font-bold h-12">
             <CheckCircle2 className="w-4 h-4 mr-2" /> Aprovar e Publicar
           </Button>
         )}

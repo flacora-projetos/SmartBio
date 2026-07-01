@@ -9,28 +9,32 @@ import { Offers } from '@/pages/dashboard/Offers';
 import { Quiz } from '@/pages/dashboard/Quiz';
 import { Preview } from '@/pages/dashboard/Preview';
 import { SmartBioPage } from '@/pages/public/SmartBioPage';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Landing />} />
-        
-        {/* Auth Routes */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        
-        {/* Dashboard Routes */}
-        <Route path="/app" element={<Overview />} />
-        <Route path="/app/onboarding" element={<Onboarding />} />
-        <Route path="/app/offers" element={<Offers />} />
-        <Route path="/app/quiz" element={<Quiz />} />
-        <Route path="/app/preview" element={<Preview />} />
-        
-        {/* Public Slug */}
-        <Route path="/s/:slug" element={<SmartBioPage />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Landing />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Dashboard Routes */}
+          <Route path="/app" element={<ProtectedRoute><Overview /></ProtectedRoute>} />
+          <Route path="/app/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+          <Route path="/app/offers" element={<ProtectedRoute><Offers /></ProtectedRoute>} />
+          <Route path="/app/quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+          <Route path="/app/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
+          
+          {/* Public Slug */}
+          <Route path="/s/:slug" element={<SmartBioPage />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
