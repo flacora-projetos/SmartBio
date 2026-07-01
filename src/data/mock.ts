@@ -375,43 +375,43 @@ export const mockOnboardingSteps = [
   {
     id: 'step_identity',
     title: 'Identidade',
-    description: 'Preencha as informações principais da sua marca.',
+    description: 'Preencha como se estivesse escrevendo a bio do Instagram — direto ao ponto: quem você é, o que você faz e pra quem. Sua foto e nome aparecem no topo da SmartBio.',
     type: 'identity'
   },
   {
     id: 'step_objective',
     title: 'Objetivo',
-    description: 'Qual é o seu principal objetivo com a SmartBio?',
+    description: 'O que você quer que aconteça quando alguém acessa sua SmartBio? Escolha uma sugestão ou descreva com suas palavras — a IA vai usar isso para gerar a estrutura certa.',
     type: 'objective'
   },
   {
     id: 'step_audience',
     title: 'Público',
-    description: 'Quem é o seu visitante ideal?',
+    description: 'Descreva o visitante que você quer atrair. Quanto mais específico você for, mais precisa será a recomendação gerada para cada perfil.',
     type: 'audience'
   },
   {
     id: 'step_offers',
     title: 'Ofertas',
-    description: 'As ofertas serão usadas pela SmartBio para recomendar o próximo passo certo.',
+    description: 'Qual é o produto, serviço ou experiência que você quer recomendar? Comece com a principal — você poderá adicionar mais depois na tela de Ofertas.',
     type: 'offers'
   },
   {
     id: 'step_diagnostic',
     title: 'Diagnóstico',
-    description: 'Defina as perguntas que vão ajudar a qualificar seus visitantes.',
+    description: 'Estas são as perguntas que seus visitantes vão responder ao acessar sua SmartBio. Com base nas respostas, a plataforma recomenda automaticamente a oferta certa para cada perfil.',
     type: 'diagnostic'
   },
   {
     id: 'step_conversion',
     title: 'Conversão',
-    description: 'Como você deseja converter seus visitantes?',
+    description: 'Defina o destino principal após a recomendação. Na tela de Quiz você poderá criar regras para enviar perfis diferentes para destinos diferentes — WhatsApp, agenda, checkout ou formulário.',
     type: 'conversion'
   },
   {
     id: 'step_style',
     title: 'Estilo',
-    description: 'Escolha a aparência da sua SmartBio.',
+    description: 'Use o HEX exato da sua identidade visual para manter consistência de marca na SmartBio.',
     type: 'style'
   },
   {

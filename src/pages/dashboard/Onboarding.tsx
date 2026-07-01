@@ -165,12 +165,28 @@ export function Onboarding() {
 
       case 'objective':
         return (
-          <div className="space-y-3">
-            {['Vender uma oferta', 'Captar leads', 'Qualificar interessados', 'Agendar atendimento'].map((objective) => (
-              <button key={objective} type="button" onClick={() => updateAnswer('objective', objective)} className={`w-full text-left p-4 rounded-xl border-2 cursor-pointer transition-colors ${answers.objective === objective ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-ink'}`}>
-                <span className="font-medium">{objective}</span>
-              </button>
-            ))}
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              {['Vender uma oferta', 'Captar leads', 'Qualificar interessados', 'Agendar atendimento'].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => updateAnswer('objective', suggestion)}
+                  className={`px-4 py-2 rounded-xl border-2 text-sm font-medium transition-colors cursor-pointer ${answers.objective === suggestion ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-muted-foreground'}`}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-ink">Ou descreva com suas próprias palavras</label>
+              <input
+                className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={answers.objective}
+                onChange={(e) => updateAnswer('objective', e.target.value)}
+                placeholder="Ex: quero agendar consultas para meu consultório odontológico"
+              />
+            </div>
           </div>
         );
 
@@ -252,7 +268,7 @@ export function Onboarding() {
           <div className="space-y-6">
             <div className="space-y-3">
               <label className="text-sm font-medium text-ink">Tema visual</label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button type="button" onClick={() => updateAnswer('theme', 'light')} className={`p-4 rounded-xl border-2 ${answers.theme === 'light' ? 'border-primary' : 'border-border'} bg-background cursor-pointer flex flex-col items-center gap-2`}>
                   <div className="w-8 h-8 rounded-full bg-background border border-border shadow-sm" />
                   <span className="text-xs font-bold text-primary">Claro</span>
@@ -264,10 +280,38 @@ export function Onboarding() {
               </div>
             </div>
             <div className="space-y-3">
-              <label className="text-sm font-medium text-ink">Cor de destaque</label>
-              <div className="flex gap-3">
-                {['#000000', '#2563eb', '#16a34a', '#d97706', '#db2777'].map((color) => (
-                  <button key={color} type="button" aria-label={`Cor ${color}`} onClick={() => updateAnswer('accentColor', color)} className={`w-8 h-8 rounded-full cursor-pointer ${answers.accentColor === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`} style={{ backgroundColor: color }} />
+              <label className="text-sm font-medium text-ink">Cor de destaque da marca</label>
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={answers.accentColor}
+                  onChange={(e) => updateAnswer('accentColor', e.target.value)}
+                  className="w-12 h-12 rounded-xl border border-border cursor-pointer p-1 bg-transparent"
+                />
+                <input
+                  type="text"
+                  value={answers.accentColor.toUpperCase()}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) updateAnswer('accentColor', val);
+                  }}
+                  className="flex-1 px-4 py-2 rounded-xl border border-border bg-background font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 uppercase"
+                  placeholder="#000000"
+                  maxLength={7}
+                />
+                <div className="w-12 h-12 rounded-xl border border-border shrink-0" style={{ backgroundColor: answers.accentColor }} />
+              </div>
+              <p className="text-xs text-muted-foreground">Sugestões rápidas:</p>
+              <div className="flex gap-2 flex-wrap">
+                {['#000000', '#2563EB', '#16A34A', '#D97706', '#DB2777', '#7C3AED', '#DC2626'].map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    aria-label={color}
+                    onClick={() => updateAnswer('accentColor', color)}
+                    className={`w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110 ${answers.accentColor.toUpperCase() === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                    style={{ backgroundColor: color }}
+                  />
                 ))}
               </div>
             </div>
