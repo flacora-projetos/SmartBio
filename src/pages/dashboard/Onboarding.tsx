@@ -9,6 +9,7 @@ import type { PublicSmartBioData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { getOrCreateTenant } from '@/lib/tenant';
 import { generateInitialPreview, type OnboardingDraftAnswers } from '@/lib/smartbio-flow';
 
 const initialAnswers: OnboardingDraftAnswers = {
@@ -57,18 +58,28 @@ export function Onboarding() {
       return;
     }
 
-    if (!tenant) {
-      setErrorMessage('Nao foi possivel identificar o workspace desta conta.');
+    let resolvedTenant = tenant;
+
+    if (!resolvedTenant && user) {
+      try {
+        resolvedTenant = await getOrCreateTenant(user);
+      } catch (err) {
+        console.error('[Onboarding] Fallback de tenant falhou:', err);
+      }
+    }
+
+    if (!resolvedTenant) {
+      setErrorMessage('Não foi possível identificar o workspace. Recarregue a página e tente novamente.');
       return;
     }
 
     try {
       setIsGenerating(true);
-      await generateInitialPreview(tenant, answers);
+      await generateInitialPreview(resolvedTenant, answers);
       navigate('/app/preview');
     } catch (error) {
       console.error(error);
-      setErrorMessage('Nao foi possivel gerar o preview agora. Tente novamente em instantes.');
+      setErrorMessage('Não foi possível gerar o preview agora. Tente novamente em instantes.');
     } finally {
       setIsGenerating(false);
     }

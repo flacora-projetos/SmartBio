@@ -28,8 +28,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const nextTenant = await getOrCreateTenant(user);
-    setTenant(nextTenant);
+    try {
+      const nextTenant = await getOrCreateTenant(user);
+      setTenant(nextTenant);
+    } catch (err) {
+      console.error('[AuthContext] Erro ao carregar tenant:', err);
+      // Mantém o tenant atual se já estava carregado — não sobrescreve com null
+    }
   }
 
   async function refreshTenant() {
