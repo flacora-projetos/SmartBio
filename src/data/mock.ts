@@ -77,7 +77,7 @@ export const landingData = {
       price: "97",
       priceAnnual: "77",
       description: "Para profissionais e marcas com uma operação.",
-      priceLabel: "R$97",
+      priceLabel: "97",
       currency: "R$",
       features: ["1 SmartBio publicada", "Até 5 ofertas", "Quiz de diagnóstico", "Recomendação personalizada", "Preview antes da publicação", "Leads com histórico de 60 dias", "Analytics de funil"]
     },
@@ -87,7 +87,7 @@ export const landingData = {
       price: "247",
       priceAnnual: "197",
       description: "Para agências e profissionais que gerenciam múltiplos clientes.",
-      priceLabel: "R$247",
+      priceLabel: "247",
       currency: "R$",
       features: ["Até 20 SmartBios publicadas", "Ofertas ilimitadas", "Quiz sem limite de perguntas", "Histórico de leads sem limite", "Analytics completo com exportação", "Domínio próprio (em breve)", "Suporte prioritário"],
       highlighted: true
