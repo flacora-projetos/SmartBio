@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  Sparkles, ArrowRight, Loader2, Phone, Globe, Youtube,
+  Music, ExternalLink, Calendar, ShoppingBag, Mic, BookOpen,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PublicSmartBioHeader } from '@/components/public/PublicSmartBioHeader';
 import { QuizFlowMock } from '@/components/public/QuizFlowMock';
@@ -10,23 +13,108 @@ import {
   fetchPublicSmartBio,
   findMatchingRule,
   buildCtaUrl,
+  buildWhatsAppUrl,
   trackEvent,
   insertLead,
   type PublicPageData,
   type PublicOffer,
   type PublicRule,
+  type PublicAsset,
 } from '@/lib/public-smartbio';
 
-type PageState = 'loading' | 'not_found' | 'paused' | 'start' | 'quiz' | 'result';
+type PageState  = 'loading' | 'not_found' | 'paused' | 'ready';
+type QuizState  = 'idle' | 'in_progress' | 'completed';
+
+// ── Asset card helpers ───────────────────────────────────────────────────────
+
+function assetIcon(type: string) {
+  switch (type) {
+    case 'whatsapp':  return <Phone className="w-5 h-5" />;
+    case 'youtube':
+    case 'video':     return <Youtube className="w-5 h-5" />;
+    case 'spotify':
+    case 'podcast':   return <Mic className="w-5 h-5" />;
+    case 'music':     return <Music className="w-5 h-5" />;
+    case 'calendar':  return <Calendar className="w-5 h-5" />;
+    case 'product':   return <ShoppingBag className="w-5 h-5" />;
+    case 'post':      return <BookOpen className="w-5 h-5" />;
+    case 'site':
+    case 'link':
+    default:          return <Globe className="w-5 h-5" />;
+  }
+}
+
+function AssetCard({ asset }: { asset: PublicAsset }) {
+  const isWhatsApp = asset.type === 'whatsapp';
+
+  const href = isWhatsApp && asset.phone
+    ? buildWhatsAppUrl(asset.phone, asset.message_template)
+    : (asset.url ?? '#');
+
+  const accentClass = isWhatsApp
+    ? 'bg-[#25D366]/10 text-[#25D366] border-[#25D366]/20'
+    : 'bg-primary/10 text-primary border-primary/20';
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-center gap-4 p-4 bg-surface border border-border rounded-2xl hover:border-primary/40 hover:shadow-md transition-all duration-200"
+    >
+      <div className={`w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 ${accentClass}`}>
+        {assetIcon(asset.type)}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-ink text-sm leading-tight truncate">{asset.title}</p>
+        {asset.subtitle && (
+          <p className="text-xs text-muted-foreground mt-0.5 truncate">{asset.subtitle}</p>
+        )}
+      </div>
+      <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+    </a>
+  );
+}
+
+function OfferCard({ offer, onCtaClick }: { offer: PublicOffer; onCtaClick: (offer: PublicOffer) => void }) {
+  return (
+    <div className="flex flex-col bg-surface border border-border rounded-2xl overflow-hidden hover:border-primary/30 hover:shadow-md transition-all duration-200">
+      {offer.image_url && (
+        <div className="w-full h-36 overflow-hidden">
+          <img src={offer.image_url} alt={offer.title} className="w-full h-full object-cover" />
+        </div>
+      )}
+      <div className="p-4 flex flex-col flex-1">
+        <h4 className="font-bold text-ink text-sm font-heading leading-tight mb-1">{offer.title}</h4>
+        {offer.price_label && (
+          <p className="text-primary font-bold text-sm mb-2">{offer.price_label}</p>
+        )}
+        {offer.description && (
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3 flex-1 mb-3">{offer.description}</p>
+        )}
+        <Button
+          onClick={() => onCtaClick(offer)}
+          size="sm"
+          className="w-full bg-primary text-primary-foreground rounded-xl font-bold text-xs h-9 hover:scale-[1.01] transition-transform mt-auto"
+        >
+          {offer.recommended_cta ?? 'Saiba mais'}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Main component ───────────────────────────────────────────────────────────
 
 export function SmartBioPage() {
   const { slug } = useParams<{ slug: string }>();
-  const [pageState, setPageState] = useState<PageState>('loading');
-  const [pageData, setPageData] = useState<PublicPageData | null>(null);
-  const [pausedTitle, setPausedTitle] = useState<string>('');
+  const [pageState, setPageState]   = useState<PageState>('loading');
+  const [quizState, setQuizState]   = useState<QuizState>('idle');
+  const [pageData, setPageData]     = useState<PublicPageData | null>(null);
+  const [pausedTitle, setPausedTitle] = useState('');
   const [matchedOffer, setMatchedOffer] = useState<PublicOffer | null>(null);
-  const [matchedRule, setMatchedRule] = useState<PublicRule | null>(null);
-  const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
+  const [matchedRule, setMatchedRule]   = useState<PublicRule | null>(null);
+  const [quizAnswers, setQuizAnswers]   = useState<string[]>([]);
 
   const { fireEvent } = useTrackingTags(pageData?.smartbio.tracking_config ?? {});
 
@@ -41,21 +129,20 @@ export function SmartBioPage() {
         return;
       }
       setPageData(data);
-      setPageState('start');
+      setPageState('ready');
       trackEvent(data.smartbio.tenant_id, data.smartbio.id, 'page_view', { slug });
     });
   }, [slug]);
 
-  // Dispara page_view nas plataformas externas após os scripts carregarem
   useEffect(() => {
-    if (pageState === 'start' && pageData) {
+    if (pageState === 'ready' && pageData) {
       fireEvent('page_view', { content_name: pageData.smartbio.title });
     }
   }, [pageState, pageData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleStartQuiz = () => {
     if (!pageData) return;
-    setPageState('quiz');
+    setQuizState('in_progress');
     trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
     fireEvent('quiz_start');
   };
@@ -64,14 +151,14 @@ export function SmartBioPage() {
     if (!pageData) return;
     setQuizAnswers(answers);
 
-    const rule = findMatchingRule(pageData.rules, answers);
+    const rule  = findMatchingRule(pageData.rules, answers);
     const offer = rule?.recommended_offer_id
       ? pageData.offers.find(o => o.id === rule.recommended_offer_id) ?? pageData.offers[0]
       : pageData.offers[0];
 
     setMatchedRule(rule);
     setMatchedOffer(offer ?? null);
-    setPageState('result');
+    setQuizState('completed');
 
     trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_complete', {
       answers,
@@ -81,30 +168,31 @@ export function SmartBioPage() {
     fireEvent('quiz_complete', { num_items: pageData.questions.length });
   };
 
-  const handleCtaClick = () => {
-    if (!pageData || !matchedOffer) return;
+  const handleResetQuiz = () => {
+    setQuizState('idle');
+    setMatchedOffer(null);
+    setMatchedRule(null);
+    setQuizAnswers([]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
-    const destination = buildCtaUrl(matchedOffer.recommended_cta, matchedOffer.cta_destination);
-
-    insertLead(
-      pageData.smartbio.tenant_id,
-      pageData.smartbio.id,
-      matchedOffer.id,
-      quizAnswers,
-      matchedOffer.recommended_cta ?? 'url'
-    );
-    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'cta_click', {
-      offer_id: matchedOffer.id,
-      destination,
-    });
-    fireEvent('cta_click', { content_name: matchedOffer.title });
-
+  const handleOfferCtaClick = (offer: PublicOffer) => {
+    if (!pageData) return;
+    const destination = buildCtaUrl(offer.recommended_cta, offer.cta_destination, offer.cta_url);
+    insertLead(pageData.smartbio.tenant_id, pageData.smartbio.id, offer.id, quizAnswers, offer.recommended_cta ?? 'url');
+    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'cta_click', { offer_id: offer.id, destination });
+    fireEvent('cta_click', { content_name: offer.title });
     if (destination !== '#') window.open(destination, '_blank', 'noopener,noreferrer');
   };
 
+  const handleRecommendedCtaClick = () => {
+    if (!pageData || !matchedOffer) return;
+    handleOfferCtaClick(matchedOffer);
+  };
+
   const diagnosticTitle =
-    (pageData?.smartbio.public_config?.diagnosticTitle as string | undefined) ??
-    'Descubra o próximo passo ideal';
+    (pageData?.smartbio.public_config?.diagnosticTitle as string | undefined)
+    ?? 'Descubra o próximo passo ideal';
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (pageState === 'loading') {
@@ -132,7 +220,7 @@ export function SmartBioPage() {
     );
   }
 
-  // ── Pausada (trial expirado) ──────────────────────────────────────────────
+  // ── Pausada ──────────────────────────────────────────────────────────────
   if (pageState === 'paused') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-8">
@@ -140,9 +228,7 @@ export function SmartBioPage() {
           <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
             <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">SB</div>
           </div>
-          {pausedTitle && (
-            <p className="text-sm font-semibold text-muted-foreground">{pausedTitle}</p>
-          )}
+          {pausedTitle && <p className="text-sm font-semibold text-muted-foreground">{pausedTitle}</p>}
           <div className="space-y-2">
             <h2 className="text-2xl font-bold font-heading text-ink">SmartBio pausada</h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -160,107 +246,127 @@ export function SmartBioPage() {
 
   if (!pageData) return null;
 
-  // ── Interactive content (shared between mobile & desktop) ────────────────
-  const interactiveContent = (
-    <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto pb-10">
-      {pageState === 'start' && (
-        <div className="flex-1 flex flex-col justify-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="bg-background border border-border p-6 rounded-3xl text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="w-6 h-6" />
+  const hasOffers = pageData.offers.length > 0;
+  const hasAssets = pageData.assets.length > 0;
+  const hasQuiz   = pageData.questions.length > 0;
+
+  // ── Conteúdo central scrollável (compartilhado entre mobile e desktop) ────
+  const mainContent = (
+    <div className="flex flex-col gap-8 pb-12">
+
+      {/* Quiz section */}
+      {hasQuiz && (
+        <section>
+          {quizState === 'idle' && (
+            <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 text-center animate-in fade-in duration-300">
+              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="w-6 h-6" />
+              </div>
+              <h2 className="text-lg font-bold font-heading text-ink mb-2">{diagnosticTitle}</h2>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+                Responda algumas perguntas rápidas e receba uma recomendação personalizada.
+              </p>
+              <Button
+                onClick={handleStartQuiz}
+                className="bg-primary text-primary-foreground rounded-xl px-8 h-12 font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
+              >
+                Iniciar diagnóstico <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
             </div>
-            <h2 className="text-xl font-bold font-heading text-ink mb-3">
-              {diagnosticTitle}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              Responda algumas perguntas rápidas e receba uma recomendação personalizada.
-            </p>
-            <Button
-              onClick={handleStartQuiz}
-              className="w-full bg-primary text-primary-foreground rounded-xl h-12 font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
-            >
-              Começar Diagnóstico <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
-
-          {pageData.offers.length > 0 && (
-            <p className="text-center text-xs text-muted-foreground mt-6">
-              {pageData.offers.length} opção{pageData.offers.length > 1 ? 'ões' : ''} disponível{pageData.offers.length > 1 ? 'eis' : ''}
-            </p>
           )}
-        </div>
+
+          {quizState === 'in_progress' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <QuizFlowMock questions={pageData.questions} onComplete={handleQuizComplete} />
+            </div>
+          )}
+
+          {quizState === 'completed' && matchedOffer && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <RecommendationResult
+                offer={matchedOffer}
+                rule={matchedRule}
+                onCtaClick={handleRecommendedCtaClick}
+                onReset={handleResetQuiz}
+              />
+            </div>
+          )}
+        </section>
       )}
 
-      {pageState === 'quiz' && pageData.questions.length > 0 && (
-        <div className="flex-1 flex flex-col justify-center">
-          <QuizFlowMock
-            questions={pageData.questions}
-            onComplete={handleQuizComplete}
-          />
-        </div>
+      {/* Ofertas */}
+      {hasOffers && (
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 px-1">
+            {quizState === 'completed' ? 'Veja todas as opções' : 'O que posso fazer por você'}
+          </h3>
+          <div className={`grid gap-4 ${pageData.offers.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
+            {pageData.offers.map(offer => (
+              <OfferCard
+                key={offer.id}
+                offer={offer}
+                onCtaClick={handleOfferCtaClick}
+              />
+            ))}
+          </div>
+        </section>
       )}
 
-      {pageState === 'result' && matchedOffer && (
-        <div className="flex-1 flex flex-col justify-center">
-          <RecommendationResult
-            offer={matchedOffer}
-            rule={matchedRule}
-            onCtaClick={handleCtaClick}
-          />
-        </div>
+      {/* Ativos */}
+      {hasAssets && (
+        <section>
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 px-1">
+            Mais recursos
+          </h3>
+          <div className="flex flex-col gap-3">
+            {pageData.assets.map(asset => (
+              <AssetCard key={asset.id} asset={asset} />
+            ))}
+          </div>
+        </section>
       )}
+
+      {/* Branding */}
+      <div className="flex justify-center pt-4">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">
+          Criado com SmartBio
+        </span>
+      </div>
     </div>
   );
 
-  // ── Page ─────────────────────────────────────────────────────────────────
+  // ── Page layout ──────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
-      {/* Background orb */}
+      {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl absolute -top-[300px] left-1/2 -translate-x-1/2" />
+        <div className="w-[700px] h-[700px] bg-primary/4 rounded-full blur-3xl absolute -top-[350px] left-1/2 -translate-x-1/2" />
       </div>
 
-      {/* ── DESKTOP layout (lg+) ── */}
+      {/* ── DESKTOP (lg+) — painel lateral fixo + scroll direita ── */}
       <div className="hidden lg:flex min-h-screen">
 
-        {/* Left profile panel — sticky */}
-        <div className="w-[360px] xl:w-[420px] shrink-0 sticky top-0 h-screen">
+        <div className="w-[360px] xl:w-[400px] shrink-0 sticky top-0 h-screen">
           <PublicSmartBioHeader smartbio={pageData.smartbio} side />
         </div>
 
-        {/* Right content area */}
-        <div className="flex-1 flex items-center justify-center p-12 bg-surface/40">
-          <div className="w-full max-w-[500px] flex flex-col bg-surface border border-border rounded-3xl shadow-2xl overflow-hidden">
-            {interactiveContent}
-
-            {/* Branding inside card */}
-            <div className="flex justify-center py-4 border-t border-border">
-              <span className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest">
-                Criado com SmartBio
-              </span>
-            </div>
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-[640px] mx-auto px-10 py-12">
+            {mainContent}
           </div>
         </div>
 
       </div>
 
-      {/* ── MOBILE layout (< lg) ── */}
+      {/* ── MOBILE (< lg) — coluna única ── */}
       <div className="lg:hidden flex flex-col items-center">
-        <div className="w-full max-w-[480px] min-h-screen flex flex-col relative z-10 shadow-2xl bg-surface sm:border-x sm:border-border">
-
+        <div className="w-full max-w-[480px] min-h-screen flex flex-col sm:border-x sm:border-border">
           <PublicSmartBioHeader smartbio={pageData.smartbio} />
-
-          {interactiveContent}
-
-          {/* Branding bottom fade */}
-          <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-surface via-surface to-transparent flex justify-center pb-6 pointer-events-none">
-            <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">
-              Criado com SmartBio
-            </span>
+          <div className="flex-1 px-5 py-7">
+            {mainContent}
           </div>
         </div>
       </div>
-
     </div>
   );
 }

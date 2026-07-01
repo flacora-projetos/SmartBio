@@ -9,6 +9,7 @@ export type PublicSmartBio = {
   public_config: Record<string, unknown>;
   theme_config: Record<string, unknown>;
   tracking_config: Record<string, unknown>;
+  social_links: Record<string, string>;
 };
 
 export type PublicOffer = {
@@ -18,7 +19,20 @@ export type PublicOffer = {
   price_label: string | null;
   recommended_cta: string | null;
   cta_destination: string | null;
+  cta_url: string | null;
   image_url: string | null;
+};
+
+export type PublicAsset = {
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string | null;
+  url: string | null;
+  image_url: string | null;
+  phone: string | null;
+  message_template: string | null;
+  sort_order: number;
 };
 
 export type PublicQuestion = {
@@ -43,6 +57,7 @@ export type PublicPageData = {
   offers: PublicOffer[];
   questions: PublicQuestion[];
   rules: PublicRule[];
+  assets: PublicAsset[];
 };
 
 export type PausedPageData = {
@@ -53,7 +68,7 @@ export type PausedPageData = {
 export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | PausedPageData | null> {
   const { data: smartbio, error } = await supabase
     .from('smartbios')
-    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config')
+    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config, social_links')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();
@@ -69,10 +84,10 @@ export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData 
     return { paused: true, title: smartbio.title };
   }
 
-  const [offersRes, questionsRes, rulesRes] = await Promise.all([
+  const [offersRes, questionsRes, rulesRes, assetsRes] = await Promise.all([
     supabase
       .from('offers')
-      .select('id, title, description, price_label, recommended_cta, cta_destination, image_url')
+      .select('id, title, description, price_label, recommended_cta, cta_destination, cta_url, image_url')
       .eq('smartbio_id', smartbio.id)
       .eq('status', 'active')
       .order('sort_order'),
@@ -87,13 +102,20 @@ export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData 
       .select('id, condition, recommended_offer_id, recommendation_reason, final_cta')
       .eq('smartbio_id', smartbio.id)
       .eq('status', 'active'),
+    supabase
+      .from('smartbio_assets')
+      .select('id, type, title, subtitle, url, image_url, phone, message_template, sort_order')
+      .eq('smartbio_id', smartbio.id)
+      .eq('status', 'active')
+      .order('sort_order'),
   ]);
 
   return {
-    smartbio: smartbio as PublicSmartBio,
+    smartbio: { ...smartbio, social_links: (smartbio.social_links ?? {}) } as PublicSmartBio,
     offers: (offersRes.data ?? []) as PublicOffer[],
     questions: (questionsRes.data ?? []) as PublicQuestion[],
     rules: (rulesRes.data ?? []) as PublicRule[],
+    assets: (assetsRes.data ?? []) as PublicAsset[],
   };
 }
 
@@ -110,14 +132,22 @@ export function findMatchingRule(rules: PublicRule[], answers: string[]): Public
   return rules[0] ?? null;
 }
 
-export function buildCtaUrl(ctaType: string | null, destination: string | null): string {
-  if (!destination) return '#';
+export function buildCtaUrl(ctaType: string | null, destination: string | null, ctaUrl?: string | null): string {
+  const target = ctaUrl || destination;
+  if (!target) return '#';
   if (ctaType === 'whatsapp') {
-    const number = destination.replace(/\D/g, '');
+    const number = target.replace(/\D/g, '');
     return `https://wa.me/${number}`;
   }
-  if (destination.startsWith('http')) return destination;
-  return `https://${destination}`;
+  if (target.startsWith('http')) return target;
+  return `https://${target}`;
+}
+
+export function buildWhatsAppUrl(phone: string, message?: string | null): string {
+  const number = phone.replace(/\D/g, '');
+  const url = `https://wa.me/${number}`;
+  if (message) return `${url}?text=${encodeURIComponent(message)}`;
+  return url;
 }
 
 export function trackEvent(
