@@ -1,4 +1,4 @@
-import { MessageSquare, Calendar, Users, Instagram, Twitter, Linkedin, Sparkles } from 'lucide-react';
+import { MessageSquare, Calendar, Users, Sparkles } from 'lucide-react';
 import { PublicSmartBioData } from '@/types';
 import { mockPublicSmartBioData } from '@/data/mock';
 
@@ -29,19 +29,6 @@ export function SmartBioPreviewMock({ data = mockPublicSmartBioData }: SmartBioP
           {data.bio}
         </p>
         
-        {/* Social Icons */}
-        <div className="flex gap-3 text-muted-foreground">
-          {data.socialLinks?.instagram && (
-            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-              <Instagram className="w-4 h-4" />
-            </div>
-          )}
-          {data.socialLinks?.linkedin && (
-            <div className="w-8 h-8 rounded-full bg-background border border-border flex items-center justify-center">
-              <Linkedin className="w-4 h-4" />
-            </div>
-          )}
-        </div>
       </div>
 
       {/* Interactive Module */}
