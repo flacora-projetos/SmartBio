@@ -16,6 +16,11 @@ const initialAnswers: OnboardingDraftAnswers = {
   brandName: '',
   shortBio: '',
   niche: '',
+  whatsapp: '',
+  instagram: '',
+  tiktok: '',
+  youtube: '',
+  site: '',
   objective: 'Captar leads',
   audience: '',
   pain: '',
@@ -26,9 +31,15 @@ const initialAnswers: OnboardingDraftAnswers = {
   diagnosticOptions: ['Organizar meus processos', 'Aumentar minhas vendas', 'Ter acompanhamento direto'],
   diagnosticQuestion2: '',
   diagnosticOptions2: ['', '', ''],
+  diagnosticQuestion3: '',
+  diagnosticOptions3: ['', '', ''],
+  diagnosticQuestion4: '',
+  diagnosticOptions4: ['', '', ''],
+  diagnosticQuestion5: '',
+  diagnosticOptions5: ['', '', ''],
   conversionDestination: 'whatsapp',
   buttonText: 'Falar no WhatsApp',
-  conversionMessage: 'Olá! Acabei de fazer o diagnóstico na SmartBio e gostaria de entender o próximo passo.',
+  conversionMessage: '',
   theme: 'light',
   accentColor: '#000000',
 };
@@ -79,7 +90,7 @@ export function Onboarding() {
   const [draftSaved, setDraftSaved] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
-  const [showSecondQuestion, setShowSecondQuestion] = useState(false);
+  const [numQuestionsShown, setNumQuestionsShown] = useState(1);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
@@ -109,7 +120,7 @@ export function Onboarding() {
       if (error || !data || data.length === 0) return;
 
       const merged: Partial<OnboardingDraftAnswers> = {};
-      let hasQ2 = false;
+      let hasQ2 = false, hasQ3 = false, hasQ4 = false, hasQ5 = false;
 
       for (const row of data) {
         const ans = row.answer as Record<string, unknown>;
@@ -118,6 +129,11 @@ export function Onboarding() {
             if (ans.brandName) merged.brandName = String(ans.brandName);
             if (ans.shortBio) merged.shortBio = String(ans.shortBio);
             if (ans.niche) merged.niche = String(ans.niche);
+            if (ans.whatsapp) merged.whatsapp = String(ans.whatsapp);
+            if (ans.instagram) merged.instagram = String(ans.instagram);
+            if (ans.tiktok) merged.tiktok = String(ans.tiktok);
+            if (ans.youtube) merged.youtube = String(ans.youtube);
+            if (ans.site) merged.site = String(ans.site);
             if (ans.avatarUrl) {
               merged.avatarUrl = String(ans.avatarUrl);
               setAvatarPreview(String(ans.avatarUrl));
@@ -138,11 +154,14 @@ export function Onboarding() {
             if (ans.title) merged.diagnosticTitle = String(ans.title);
             if (ans.question) merged.diagnosticQuestion = String(ans.question);
             if (Array.isArray(ans.options)) merged.diagnosticOptions = ans.options.map(String);
-            if (ans.question2) {
-              merged.diagnosticQuestion2 = String(ans.question2);
-              hasQ2 = true;
-            }
+            if (ans.question2) { merged.diagnosticQuestion2 = String(ans.question2); hasQ2 = true; }
             if (Array.isArray(ans.options2)) merged.diagnosticOptions2 = ans.options2.map(String);
+            if (ans.question3) { merged.diagnosticQuestion3 = String(ans.question3); hasQ3 = true; }
+            if (Array.isArray(ans.options3)) merged.diagnosticOptions3 = ans.options3.map(String);
+            if (ans.question4) { merged.diagnosticQuestion4 = String(ans.question4); hasQ4 = true; }
+            if (Array.isArray(ans.options4)) merged.diagnosticOptions4 = ans.options4.map(String);
+            if (ans.question5) { merged.diagnosticQuestion5 = String(ans.question5); hasQ5 = true; }
+            if (Array.isArray(ans.options5)) merged.diagnosticOptions5 = ans.options5.map(String);
             break;
           case 'step_conversion':
             if (ans.destination) merged.conversionDestination = String(ans.destination);
@@ -158,7 +177,8 @@ export function Onboarding() {
 
       if (Object.keys(merged).length > 0) {
         setAnswers(prev => ({ ...prev, ...merged }));
-        if (hasQ2) setShowSecondQuestion(true);
+        const nShown = hasQ5 ? 5 : hasQ4 ? 4 : hasQ3 ? 3 : hasQ2 ? 2 : 1;
+        setNumQuestionsShown(nShown);
       }
     }
 
@@ -244,6 +264,32 @@ export function Onboarding() {
     updateAnswer('diagnosticOptions2', nextOptions);
   };
 
+  const updateDiagnosticOption3 = (index: number, value: string) => {
+    const nextOptions = [...answers.diagnosticOptions3];
+    nextOptions[index] = value;
+    updateAnswer('diagnosticOptions3', nextOptions);
+  };
+
+  const updateDiagnosticOption4 = (index: number, value: string) => {
+    const nextOptions = [...answers.diagnosticOptions4];
+    nextOptions[index] = value;
+    updateAnswer('diagnosticOptions4', nextOptions);
+  };
+
+  const updateDiagnosticOption5 = (index: number, value: string) => {
+    const nextOptions = [...answers.diagnosticOptions5];
+    nextOptions[index] = value;
+    updateAnswer('diagnosticOptions5', nextOptions);
+  };
+
+  const removeQuestion = (n: number) => {
+    setNumQuestionsShown(n - 1);
+    if (n === 2) { updateAnswer('diagnosticQuestion2', ''); updateAnswer('diagnosticOptions2', ['', '', '']); }
+    if (n === 3) { updateAnswer('diagnosticQuestion3', ''); updateAnswer('diagnosticOptions3', ['', '', '']); }
+    if (n === 4) { updateAnswer('diagnosticQuestion4', ''); updateAnswer('diagnosticOptions4', ['', '', '']); }
+    if (n === 5) { updateAnswer('diagnosticQuestion5', ''); updateAnswer('diagnosticOptions5', ['', '', '']); }
+  };
+
   const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !user) return;
@@ -320,6 +366,61 @@ export function Onboarding() {
             <div className="space-y-2">
               <label className="text-sm font-medium text-ink">Nicho ou posicionamento</label>
               <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.niche} onChange={(event) => updateAnswer('niche', event.target.value)} placeholder="Ex: consultoria imobiliaria, mentoria, clinica, infoproduto" />
+            </div>
+
+            <div className="space-y-3 pt-2 border-t border-border">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contato e redes sociais</p>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-ink">WhatsApp <span className="text-destructive">*</span></label>
+                <input
+                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  value={answers.whatsapp}
+                  onChange={(e) => updateAnswer('whatsapp', e.target.value)}
+                  placeholder="5511999999999 (com DDD, sem espaços)"
+                  type="tel"
+                />
+                <p className="text-xs text-muted-foreground">Usado no botão do WhatsApp da página pública.</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-ink">Instagram</label>
+                  <input
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={answers.instagram}
+                    onChange={(e) => updateAnswer('instagram', e.target.value)}
+                    placeholder="@seuhandle"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-ink">TikTok <span className="text-muted-foreground text-xs">(opcional)</span></label>
+                  <input
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={answers.tiktok}
+                    onChange={(e) => updateAnswer('tiktok', e.target.value)}
+                    placeholder="@seuhandle"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-ink">YouTube <span className="text-muted-foreground text-xs">(opcional)</span></label>
+                  <input
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={answers.youtube}
+                    onChange={(e) => updateAnswer('youtube', e.target.value)}
+                    placeholder="https://youtube.com/@canal"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-ink">Site <span className="text-muted-foreground text-xs">(opcional)</span></label>
+                  <input
+                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    value={answers.site}
+                    onChange={(e) => updateAnswer('site', e.target.value)}
+                    placeholder="https://seusite.com.br"
+                  />
+                </div>
+              </div>
             </div>
           </div>
         );
@@ -437,78 +538,151 @@ export function Onboarding() {
               </div>
             </div>
 
-            {/* Pergunta 2 */}
-            {showSecondQuestion ? (
-              <div className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta 2</p>
+            {/* Perguntas adicionais (2-5) */}
+            {([
+              { n: 2, question: answers.diagnosticQuestion2, options: answers.diagnosticOptions2, updateQ: (v: string) => updateAnswer('diagnosticQuestion2', v), updateO: updateDiagnosticOption2, prevQuestion: answers.diagnosticQuestion },
+              { n: 3, question: answers.diagnosticQuestion3, options: answers.diagnosticOptions3, updateQ: (v: string) => updateAnswer('diagnosticQuestion3', v), updateO: updateDiagnosticOption3, prevQuestion: answers.diagnosticQuestion2 },
+              { n: 4, question: answers.diagnosticQuestion4, options: answers.diagnosticOptions4, updateQ: (v: string) => updateAnswer('diagnosticQuestion4', v), updateO: updateDiagnosticOption4, prevQuestion: answers.diagnosticQuestion3 },
+              { n: 5, question: answers.diagnosticQuestion5, options: answers.diagnosticOptions5, updateQ: (v: string) => updateAnswer('diagnosticQuestion5', v), updateO: updateDiagnosticOption5, prevQuestion: answers.diagnosticQuestion4 },
+            ] as const).map(({ n, question, options, updateQ, updateO, prevQuestion }) => (
+              numQuestionsShown >= n ? (
+                <div key={n} className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta {n}</p>
+                    {n === numQuestionsShown && (
+                      <button type="button" onClick={() => removeQuestion(n)} className="text-xs text-destructive hover:underline cursor-pointer">
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    className={inputClass}
+                    value={question}
+                    onChange={(e) => updateQ(e.target.value)}
+                    placeholder="Ex: Qual é o seu nível de experiência?"
+                  />
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
+                    {options.map((option, index) => (
+                      <input
+                        key={index}
+                        className={inputClass}
+                        value={option}
+                        onChange={(e) => updateO(index, e.target.value)}
+                        placeholder={`Opção ${index + 1}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                numQuestionsShown === n - 1 && prevQuestion?.trim() && numQuestionsShown < 5 ? (
                   <button
+                    key={n}
                     type="button"
-                    onClick={() => {
-                      setShowSecondQuestion(false);
-                      updateAnswer('diagnosticQuestion2', '');
-                      updateAnswer('diagnosticOptions2', ['', '', '']);
-                    }}
-                    className="text-xs text-destructive hover:underline cursor-pointer"
+                    onClick={() => setNumQuestionsShown(n)}
+                    className="w-full py-2.5 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
                   >
-                    Remover
+                    + Adicionar pergunta {n} <span className="text-xs opacity-60">(máx. 5)</span>
                   </button>
-                </div>
-                <input
-                  className={inputClass}
-                  value={answers.diagnosticQuestion2}
-                  onChange={(e) => updateAnswer('diagnosticQuestion2', e.target.value)}
-                  placeholder="Ex: Qual é o seu nível de experiência?"
-                />
-                <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
-                  {answers.diagnosticOptions2.map((option, index) => (
-                    <input
-                      key={index}
-                      className={inputClass}
-                      value={option}
-                      onChange={(e) => updateDiagnosticOption2(index, e.target.value)}
-                      placeholder={`Opção ${index + 1}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowSecondQuestion(true)}
-                className="w-full py-2.5 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
-              >
-                + Adicionar segunda pergunta
-              </button>
-            )}
+                ) : null
+              )
+            ))}
           </div>
         );
       }
 
-      case 'conversion':
+      case 'conversion': {
+        const destOptions: { value: string; label: string; buttonDefault: string }[] = [
+          { value: 'whatsapp', label: 'WhatsApp', buttonDefault: 'Falar no WhatsApp' },
+          { value: 'agenda', label: 'Agenda', buttonDefault: 'Agendar agora' },
+          { value: 'formulario', label: 'Formulário', buttonDefault: 'Preencher formulário' },
+          { value: 'checkout', label: 'Checkout', buttonDefault: 'Comprar agora' },
+        ];
+
+        const ctaFieldLabel: Record<string, string> = {
+          whatsapp: 'Mensagem de abertura',
+          agenda: 'Link da agenda (Calendly, Cal.com, etc.)',
+          formulario: 'Link do formulário',
+          checkout: 'Link do checkout',
+        };
+
+        const ctaFieldPlaceholder: Record<string, string> = {
+          whatsapp: 'Ex: Olá! Acabei de fazer o diagnóstico e gostaria de saber mais.',
+          agenda: 'https://calendly.com/seuperfil',
+          formulario: 'https://forms.google.com/...',
+          checkout: 'https://pay.hotmart.com/...',
+        };
+
         return (
           <div className="space-y-6">
             <div className="space-y-3">
               <label className="text-sm font-medium text-ink">Destino final do CTA</label>
               <div className="grid grid-cols-2 gap-3">
-                {['whatsapp', 'agenda', 'formulario', 'checkout'].map((destination) => (
-                  <button key={destination} type="button" onClick={() => updateAnswer('conversionDestination', destination)} className={`p-3 rounded-xl border-2 text-center cursor-pointer text-sm font-medium capitalize ${answers.conversionDestination === destination ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-ink'}`}>
-                    {destination}
+                {destOptions.map(({ value, label, buttonDefault }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setAnswers(prev => ({
+                      ...prev,
+                      conversionDestination: value,
+                      buttonText: buttonDefault,
+                      conversionMessage: value === 'whatsapp' ? '' : '',
+                    }))}
+                    className={`p-3 rounded-xl border-2 text-center cursor-pointer text-sm font-medium ${answers.conversionDestination === value ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-ink'}`}
+                  >
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
+
+            {answers.conversionDestination === 'whatsapp' && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-ink">Número do WhatsApp</label>
+                <input
+                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  value={answers.whatsapp}
+                  onChange={(e) => updateAnswer('whatsapp', e.target.value)}
+                  placeholder="5511999999999 (com DDD, sem espaços)"
+                  type="tel"
+                />
+                <p className="text-xs text-muted-foreground">Sincronizado com o número informado na identidade.</p>
+              </div>
+            )}
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Texto do botao final</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.buttonText} onChange={(event) => updateAnswer('buttonText', event.target.value)} />
+              <label className="text-sm font-medium text-ink">
+                {ctaFieldLabel[answers.conversionDestination] ?? 'Destino do CTA'}
+              </label>
+              {answers.conversionDestination === 'whatsapp' ? (
+                <textarea
+                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 h-24"
+                  value={answers.conversionMessage}
+                  onChange={(e) => updateAnswer('conversionMessage', e.target.value)}
+                  placeholder={ctaFieldPlaceholder.whatsapp}
+                />
+              ) : (
+                <input
+                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  value={answers.conversionMessage}
+                  onChange={(e) => updateAnswer('conversionMessage', e.target.value)}
+                  placeholder={ctaFieldPlaceholder[answers.conversionDestination] ?? ''}
+                  type="url"
+                />
+              )}
             </div>
+
             <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Mensagem ou destino do CTA</label>
-              <textarea className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 h-24" value={answers.conversionMessage} onChange={(event) => updateAnswer('conversionMessage', event.target.value)} />
+              <label className="text-sm font-medium text-ink">Texto do botão final</label>
+              <input
+                className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                value={answers.buttonText}
+                onChange={(e) => updateAnswer('buttonText', e.target.value)}
+              />
             </div>
           </div>
         );
+      }
 
       case 'style':
         return (
@@ -574,7 +748,7 @@ export function Onboarding() {
                 { label: 'Identidade', value: answers.brandName || 'A preencher' },
                 { label: 'Objetivo', value: answers.objective },
                 { label: 'Oferta', value: answers.offerTitle || 'Oferta inicial sera gerada' },
-                { label: 'Diagnostico', value: answers.diagnosticQuestion ? '1 pergunta' : 'Pendente' },
+                { label: 'Diagnostico', value: (() => { const n = [answers.diagnosticQuestion, answers.diagnosticQuestion2, answers.diagnosticQuestion3, answers.diagnosticQuestion4, answers.diagnosticQuestion5].filter(q => q?.trim()).length; return n > 0 ? `${n} pergunta${n > 1 ? 's' : ''}` : 'Pendente'; })() },
                 { label: 'Conversao', value: answers.conversionDestination },
                 { label: 'Estilo', value: answers.theme === 'light' ? 'Claro' : 'Escuro' },
               ].map((item) => (
@@ -662,13 +836,14 @@ export function Onboarding() {
                     ? [{ title: answers.offerTitle, description: answers.offerDescription } as unknown as PublicSmartBioData['offers'][0]]
                     : [],
                   quizQuestions: [
-                    ...(answers.diagnosticQuestion
-                      ? [{ question: answers.diagnosticQuestion, options: answers.diagnosticOptions.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
-                      : []),
-                    ...(showSecondQuestion && answers.diagnosticQuestion2
-                      ? [{ question: answers.diagnosticQuestion2, options: answers.diagnosticOptions2.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
-                      : []),
-                  ],
+                    { q: answers.diagnosticQuestion, opts: answers.diagnosticOptions },
+                    { q: answers.diagnosticQuestion2, opts: answers.diagnosticOptions2 },
+                    { q: answers.diagnosticQuestion3, opts: answers.diagnosticOptions3 },
+                    { q: answers.diagnosticQuestion4, opts: answers.diagnosticOptions4 },
+                    { q: answers.diagnosticQuestion5, opts: answers.diagnosticOptions5 },
+                  ]
+                    .filter(({ q }) => q?.trim())
+                    .map(({ q, opts }) => ({ question: q, options: opts.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0])),
                 }} />
               </div>
             </div>

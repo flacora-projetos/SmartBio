@@ -44,19 +44,36 @@ export type OnboardingDraftAnswers = {
   brandName: string;
   shortBio: string;
   niche: string;
+  // Redes sociais / ativos de contato
+  whatsapp: string;
+  instagram: string;
+  tiktok: string;
+  youtube: string;
+  site: string;
+  // Público e objetivo
   objective: string;
   audience: string;
   pain: string;
+  // Oferta principal
   offerTitle: string;
   offerDescription: string;
+  // Diagnóstico — até 5 perguntas
   diagnosticTitle: string;
   diagnosticQuestion: string;
   diagnosticOptions: string[];
   diagnosticQuestion2: string;
   diagnosticOptions2: string[];
+  diagnosticQuestion3: string;
+  diagnosticOptions3: string[];
+  diagnosticQuestion4: string;
+  diagnosticOptions4: string[];
+  diagnosticQuestion5: string;
+  diagnosticOptions5: string[];
+  // Conversão
   conversionDestination: string;
   buttonText: string;
   conversionMessage: string;
+  // Estilo
   theme: 'light' | 'dark';
   accentColor: string;
   avatarUrl?: string;
@@ -221,11 +238,11 @@ async function enrichWithAI(answers: OnboardingDraftAnswers): Promise<AiEnrichme
 
 async function saveOnboardingAnswers(tenantId: string, smartbioId: string, answers: OnboardingDraftAnswers) {
   const rows = [
-    { step_id: 'step_identity', answer: { brandName: answers.brandName, shortBio: answers.shortBio, niche: answers.niche, avatarUrl: answers.avatarUrl || null } },
+    { step_id: 'step_identity', answer: { brandName: answers.brandName, shortBio: answers.shortBio, niche: answers.niche, avatarUrl: answers.avatarUrl || null, whatsapp: answers.whatsapp, instagram: answers.instagram, tiktok: answers.tiktok, youtube: answers.youtube, site: answers.site } },
     { step_id: 'step_objective', answer: { objective: answers.objective } },
     { step_id: 'step_audience', answer: { audience: answers.audience, pain: answers.pain } },
     { step_id: 'step_offers', answer: { title: answers.offerTitle, description: answers.offerDescription } },
-    { step_id: 'step_diagnostic', answer: { title: answers.diagnosticTitle, question: answers.diagnosticQuestion, options: answers.diagnosticOptions, question2: answers.diagnosticQuestion2, options2: answers.diagnosticOptions2 } },
+    { step_id: 'step_diagnostic', answer: { title: answers.diagnosticTitle, question: answers.diagnosticQuestion, options: answers.diagnosticOptions, question2: answers.diagnosticQuestion2, options2: answers.diagnosticOptions2, question3: answers.diagnosticQuestion3, options3: answers.diagnosticOptions3, question4: answers.diagnosticQuestion4, options4: answers.diagnosticOptions4, question5: answers.diagnosticQuestion5, options5: answers.diagnosticOptions5 } },
     { step_id: 'step_conversion', answer: { destination: answers.conversionDestination, buttonText: answers.buttonText, message: answers.conversionMessage } },
     { step_id: 'step_style', answer: { theme: answers.theme, accentColor: answers.accentColor } },
   ].map((row) => ({
@@ -355,7 +372,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
     if (questionUpdateError) throw questionUpdateError;
   }
 
-  // Segunda pergunta (opcional)
+  // Perguntas opcionais 2–5
   const q2Text = answers.diagnosticQuestion2.trim();
   if (q2Text) {
     const rawOptions2 = answers.diagnosticOptions2 ?? [];
@@ -388,6 +405,37 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         options: fallbackOptions2,
         status: 'active',
       }).eq('id', existingQ2.id);
+    }
+  }
+
+  // Perguntas 3–5 (mesmo padrão)
+  const extraQuestions = [
+    { text: answers.diagnosticQuestion3?.trim() ?? '', opts: answers.diagnosticOptions3 ?? [], order: 3 },
+    { text: answers.diagnosticQuestion4?.trim() ?? '', opts: answers.diagnosticOptions4 ?? [], order: 4 },
+    { text: answers.diagnosticQuestion5?.trim() ?? '', opts: answers.diagnosticOptions5 ?? [], order: 5 },
+  ];
+
+  for (const eq of extraQuestions) {
+    if (!eq.text) continue;
+    const cleanOpts = eq.opts.map(o => o.trim()).filter(Boolean);
+    const fallback = cleanOpts.length > 0 ? cleanOpts : ['Opção A', 'Opção B', 'Opção C'];
+
+    const { data: existing } = await supabase
+      .from('quiz_questions').select('id')
+      .eq('tenant_id', tenant.id).eq('smartbio_id', smartbio.id)
+      .eq('sort_order', eq.order).maybeSingle();
+
+    if (!existing) {
+      await supabase.from('quiz_questions').insert({
+        tenant_id: tenant.id, smartbio_id: smartbio.id,
+        question: eq.text, type: 'single_choice', options: fallback,
+        intention: 'Complementar o diagnóstico', status: 'active',
+        is_required: false, sort_order: eq.order,
+      });
+    } else {
+      await supabase.from('quiz_questions').update({
+        question: eq.text, options: fallback, status: 'active',
+      }).eq('id', existing.id);
     }
   }
 
@@ -433,12 +481,21 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
 
   const newSlug = slugFromBrandName(brandName);
 
+  // Monta social_links apenas com campos preenchidos
+  const social_links: Record<string, string> = {};
+  if (answers.whatsapp) social_links.whatsapp = answers.whatsapp.replace(/\D/g, '');
+  if (answers.instagram) social_links.instagram = answers.instagram.replace('@', '');
+  if (answers.tiktok) social_links.tiktok = answers.tiktok.replace('@', '');
+  if (answers.youtube) social_links.youtube = answers.youtube;
+  if (answers.site) social_links.site = answers.site;
+
   const { error: smartbioError } = await supabase
     .from('smartbios')
     .update({
       title: brandName,
       slug: newSlug,
       short_bio: shortBio,
+      social_links,
       status: 'preview_pending_approval',
       public_config: {
         generationMode: 'initial_guided_flow',
