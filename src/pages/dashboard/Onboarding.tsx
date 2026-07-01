@@ -103,7 +103,7 @@ export function Onboarding() {
     async function loadFromSupabase() {
       const { data, error } = await supabase
         .from('onboarding_answers')
-        .select('step_key, answer_json')
+        .select('step_id, answer')
         .eq('tenant_id', tenant!.id);
 
       if (error || !data || data.length === 0) return;
@@ -112,8 +112,8 @@ export function Onboarding() {
       let hasQ2 = false;
 
       for (const row of data) {
-        const ans = row.answer_json as Record<string, unknown>;
-        switch (row.step_key) {
+        const ans = row.answer as Record<string, unknown>;
+        switch (row.step_id) {
           case 'step_identity':
             if (ans.brandName) merged.brandName = String(ans.brandName);
             if (ans.shortBio) merged.shortBio = String(ans.shortBio);
@@ -125,17 +125,19 @@ export function Onboarding() {
             break;
           case 'step_objective':
             if (ans.objective) merged.objective = String(ans.objective);
+            break;
+          case 'step_audience':
             if (ans.audience) merged.audience = String(ans.audience);
             if (ans.pain) merged.pain = String(ans.pain);
             break;
           case 'step_offers':
-            if (ans.offerTitle) merged.offerTitle = String(ans.offerTitle);
-            if (ans.offerDescription) merged.offerDescription = String(ans.offerDescription);
+            if (ans.title) merged.offerTitle = String(ans.title);
+            if (ans.description) merged.offerDescription = String(ans.description);
             break;
           case 'step_diagnostic':
             if (ans.title) merged.diagnosticTitle = String(ans.title);
-            if (ans.question1) merged.diagnosticQuestion = String(ans.question1);
-            if (Array.isArray(ans.options1)) merged.diagnosticOptions = ans.options1.map(String);
+            if (ans.question) merged.diagnosticQuestion = String(ans.question);
+            if (Array.isArray(ans.options)) merged.diagnosticOptions = ans.options.map(String);
             if (ans.question2) {
               merged.diagnosticQuestion2 = String(ans.question2);
               hasQ2 = true;

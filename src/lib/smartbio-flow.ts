@@ -208,7 +208,7 @@ async function enrichWithAI(answers: OnboardingDraftAnswers): Promise<AiEnrichme
 
 async function saveOnboardingAnswers(tenantId: string, smartbioId: string, answers: OnboardingDraftAnswers) {
   const rows = [
-    { step_id: 'step_identity', answer: { brandName: answers.brandName, shortBio: answers.shortBio, niche: answers.niche } },
+    { step_id: 'step_identity', answer: { brandName: answers.brandName, shortBio: answers.shortBio, niche: answers.niche, avatarUrl: answers.avatarUrl || null } },
     { step_id: 'step_objective', answer: { objective: answers.objective } },
     { step_id: 'step_audience', answer: { audience: answers.audience, pain: answers.pain } },
     { step_id: 'step_offers', answer: { title: answers.offerTitle, description: answers.offerDescription } },
