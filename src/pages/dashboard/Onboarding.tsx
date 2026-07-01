@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
@@ -33,18 +33,59 @@ const initialAnswers: OnboardingDraftAnswers = {
   accentColor: '#000000',
 };
 
+const DRAFT_KEY = 'smartbio_onboarding_draft';
+
+function loadDraft(): Partial<OnboardingDraftAnswers> {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    return raw ? (JSON.parse(raw) as Partial<OnboardingDraftAnswers>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveDraft(answers: OnboardingDraftAnswers) {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(answers));
+  } catch {}
+}
+
+function clearDraft() {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {}
+}
+
 export function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<OnboardingDraftAnswers>(initialAnswers);
+  const [answers, setAnswers] = useState<OnboardingDraftAnswers>(() => ({
+    ...initialAnswers,
+    ...loadDraft(),
+  }));
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showSecondQuestion, setShowSecondQuestion] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
   const { tenant, user } = useAuth();
   const step = mockOnboardingSteps[currentStep];
+
+  // Auto-save rascunho no localStorage a cada mudança
+  useEffect(() => {
+    if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    draftTimerRef.current = setTimeout(() => {
+      saveDraft(answers);
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 2000);
+    }, 800);
+    return () => {
+      if (draftTimerRef.current) clearTimeout(draftTimerRef.current);
+    };
+  }, [answers]);
 
   const updateAnswer = <Key extends keyof OnboardingDraftAnswers>(key: Key, value: OnboardingDraftAnswers[Key]) => {
     setAnswers((current) => ({ ...current, [key]: value }));
@@ -64,22 +105,31 @@ export function Onboarding() {
       try {
         resolvedTenant = await getOrCreateTenant(user);
       } catch (err) {
-        console.error('[Onboarding] Fallback de tenant falhou:', err);
+        const msg = err instanceof Error ? err.message : String(err);
+        console.error('[Onboarding] Fallback de tenant falhou:', msg);
+        setErrorMessage(`Erro ao carregar workspace: ${msg}. Recarregue a página e tente novamente.`);
+        return;
       }
     }
 
     if (!resolvedTenant) {
-      setErrorMessage('Não foi possível identificar o workspace. Recarregue a página e tente novamente.');
+      setErrorMessage(
+        user
+          ? 'Workspace não encontrado para este usuário. Recarregue a página e tente novamente.'
+          : 'Sessão expirada. Faça login novamente.'
+      );
       return;
     }
 
     try {
       setIsGenerating(true);
       await generateInitialPreview(resolvedTenant, answers);
+      clearDraft();
       navigate('/app/preview');
     } catch (error) {
-      console.error(error);
-      setErrorMessage('Não foi possível gerar o preview agora. Tente novamente em instantes.');
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('[Onboarding] generateInitialPreview falhou:', msg);
+      setErrorMessage(`Erro ao gerar preview: ${msg}`);
     } finally {
       setIsGenerating(false);
     }
@@ -480,12 +530,20 @@ export function Onboarding() {
               {renderStepContent()}
             </div>
 
-            <div className="p-6 border-t border-border bg-background/50 flex items-center justify-between gap-4">
+            <div className="p-6 border-t border-border bg-background/50 flex flex-col gap-3">
+              {errorMessage && (
+                <p className="text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-xl px-4 py-2 text-center">
+                  {errorMessage}
+                </p>
+              )}
+              <div className="flex items-center justify-between gap-4">
               <Button variant="outline" className="rounded-xl px-6" onClick={handlePrev} disabled={currentStep === 0 || isGenerating}>
                 <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
               </Button>
 
-              {errorMessage && <p className="text-xs text-destructive text-center">{errorMessage}</p>}
+              <span className={`text-xs text-muted-foreground transition-opacity duration-500 ${draftSaved ? 'opacity-100' : 'opacity-0'}`}>
+                Rascunho salvo
+              </span>
 
               <Button className="rounded-xl px-8 bg-primary text-primary-foreground" onClick={handleNext} disabled={isGenerating}>
                 {currentStep === mockOnboardingSteps.length - 1 ? (
@@ -494,6 +552,7 @@ export function Onboarding() {
                   <>Continuar <ArrowRight className="w-4 h-4 ml-2" /></>
                 )}
               </Button>
+              </div>
             </div>
           </div>
 
