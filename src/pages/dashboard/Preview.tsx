@@ -13,15 +13,15 @@ import { publishWorkspaceSmartBio, readWorkspaceState, type WorkspaceState } fro
 
 // ── Iframe live preview ───────────────────────────────────────────────────────
 
-function PhoneIframe({ slug }: { slug: string }) {
+function PhoneIframe({ slug, preview = false }: { slug: string; preview?: boolean }) {
   const [key, setKey] = useState(0);
-  const src = `/s/${slug}`;
+  const src = preview ? `/s/${slug}?preview=1` : `/s/${slug}`;
 
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Smartphone className="w-3.5 h-3.5" />
-        <span>Pré-visualização ao vivo</span>
+        <span>{preview ? 'Pré-visualização (não publicada)' : 'Pré-visualização ao vivo'}</span>
         <button
           type="button"
           onClick={() => setKey(k => k + 1)}
@@ -51,81 +51,6 @@ function PhoneIframe({ slug }: { slug: string }) {
         <ExternalLink className="w-3 h-3" />
         Abrir página completa
       </a>
-    </div>
-  );
-}
-
-// ── Non-published placeholder ─────────────────────────────────────────────────
-
-function PreviewPlaceholder({ workspace }: { workspace: WorkspaceState }) {
-  const { smartbio, previewData } = workspace;
-  const initials = smartbio.title.split(' ').slice(0, 2).map((w: string) => w[0]).join('').toUpperCase();
-  const avatarUrl = previewData.avatarUrl;
-  const hasSocialLinks = Object.keys(previewData.socialLinks).length > 0;
-
-  return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Smartphone className="w-3.5 h-3.5" />
-        <span>Pré-visualização</span>
-      </div>
-      <div className="w-[300px] h-[600px] bg-background rounded-[3rem] border-[10px] border-ink shadow-2xl overflow-hidden relative flex flex-col">
-        <div className="h-6 w-1/3 bg-ink absolute top-0 left-1/2 -translate-x-1/2 rounded-b-2xl z-20" />
-
-        {/* Header */}
-        <div className="w-full pt-12 pb-4 px-5 flex flex-col items-center bg-surface border-b border-border shrink-0">
-          <div className="w-14 h-14 rounded-full bg-primary/10 border-4 border-background overflow-hidden mb-3 flex items-center justify-center shadow-sm shrink-0">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={smartbio.title} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-lg font-bold font-heading text-primary">{initials}</span>
-            )}
-          </div>
-          <h3 className="text-sm font-heading font-bold text-ink text-center leading-tight mb-1">
-            {smartbio.title}
-          </h3>
-          {smartbio.short_bio && (
-            <p className="text-[10px] text-muted-foreground text-center line-clamp-2 leading-relaxed">
-              {smartbio.short_bio}
-            </p>
-          )}
-          {hasSocialLinks && (
-            <div className="flex gap-1.5 mt-2 flex-wrap justify-center">
-              {Object.keys(previewData.socialLinks).slice(0, 4).map((k: string) => (
-                <div key={k} className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-[8px] font-bold text-primary uppercase">{k.slice(0, 2)}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Body */}
-        <div className="flex-1 p-4 flex flex-col gap-3 overflow-hidden">
-          <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-1.5">
-              Diagnóstico inteligente
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              Suas perguntas de quiz aparecerão aqui para qualificar o visitante.
-            </p>
-          </div>
-          <div className="bg-surface border border-border rounded-2xl p-3">
-            <p className="text-[9px] font-bold uppercase tracking-wider text-success mb-2">
-              Suas ofertas
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-snug">
-              As ofertas ativas aparecerão aqui como cards de recomendação.
-            </p>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="py-2 border-t border-border flex justify-center shrink-0">
-          <span className="text-[8px] text-muted-foreground uppercase tracking-widest">Criado com SmartBio</span>
-        </div>
-        <div className="h-1 w-20 bg-border absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full" />
-      </div>
     </div>
   );
 }
@@ -228,7 +153,7 @@ export function Preview() {
             <p className="text-muted-foreground text-sm">
               {isPublished
                 ? 'O preview abaixo é ao vivo — exatamente o que seus visitantes estão vendo agora.'
-                : 'Complete o onboarding e tenha ao menos uma oferta, pergunta e regra para aprovar.'}
+                : 'O preview abaixo mostra exatamente como sua página ficará depois de publicada. Revise e aprove para liberar o link.'}
             </p>
             {errorMessage && <p className="text-sm text-destructive mt-2">{errorMessage}</p>}
           </div>
@@ -238,7 +163,7 @@ export function Preview() {
             className="rounded-xl hidden sm:flex"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            {isPublished ? 'Editar onboarding' : 'Voltar para editar'}
+            {isPublished ? 'Editar minha página' : 'Voltar e ajustar'}
           </Button>
         </div>
 
@@ -283,10 +208,8 @@ export function Preview() {
           <div className="xl:flex-1 bg-surface border border-border rounded-2xl shadow-sm flex flex-col items-center justify-center py-10 px-4 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-b from-surface to-background/50 pointer-events-none" />
             <div className="relative z-10 transform scale-[0.9] sm:scale-100 origin-top">
-              {isPublished && workspace?.smartbio?.slug ? (
-                <PhoneIframe slug={workspace.smartbio.slug} />
-              ) : workspace ? (
-                <PreviewPlaceholder workspace={workspace} />
+              {workspace?.smartbio?.slug ? (
+                <PhoneIframe slug={workspace.smartbio.slug} preview={!isPublished} />
               ) : null}
             </div>
           </div>
@@ -317,7 +240,7 @@ export function Preview() {
             onClick={() => navigate('/app/onboarding')}
             className="w-full rounded-xl"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar para editar
+            <ArrowLeft className="w-4 h-4 mr-2" /> Voltar e ajustar
           </Button>
         </div>
       </div>

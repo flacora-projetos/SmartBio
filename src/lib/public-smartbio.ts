@@ -81,23 +81,43 @@ export type PausedPageData = {
   title: string;
 };
 
-export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | PausedPageData | null> {
-  const { data: smartbio, error } = await supabase
+export async function fetchPublicSmartBio(
+  slug: string,
+  options?: { preview?: boolean }
+): Promise<PublicPageData | PausedPageData | null> {
+  // Modo preview: sem filtro de status — o RLS garante que apenas membros
+  // do tenant conseguem ler uma SmartBio não publicada. Visitante anônimo
+  // com ?preview=1 continua recebendo "não encontrada".
+  const isPreview = options?.preview === true;
+
+  let query = supabase
     .from('smartbios')
     .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config, social_links, agenda_config')
-    .eq('slug', slug)
-    .eq('status', 'published')
-    .maybeSingle();
+    .eq('slug', slug);
 
-  if (error || !smartbio) return null;
+  if (!isPreview) query = query.eq('status', 'published');
 
-  // Verifica se o tenant ainda tem acesso (trial ativo ou assinatura)
-  const { data: accessible } = await supabase.rpc('check_smartbio_access', {
-    p_tenant_id: smartbio.tenant_id,
-  });
+  const { data: smartbio, error } = await query.maybeSingle();
 
-  if (!accessible) {
-    return { paused: true, title: smartbio.title };
+  if (error) {
+    console.error('[SmartBio] Erro ao carregar a página pública:', error.message);
+    return null;
+  }
+  if (!smartbio) return null;
+
+  // Verifica se o tenant ainda tem acesso (trial ativo ou assinatura).
+  // No preview do dashboard o dono sempre pode ver a própria página.
+  if (!isPreview) {
+    const { data: accessible, error: accessError } = await supabase.rpc('check_smartbio_access', {
+      p_tenant_id: smartbio.tenant_id,
+    });
+
+    if (accessError) {
+      console.error('[SmartBio] Erro ao verificar acesso do tenant:', accessError.message);
+    }
+    if (!accessError && !accessible) {
+      return { paused: true, title: smartbio.title };
+    }
   }
 
   const [offersRes, questionsRes, rulesRes, assetsRes] = await Promise.all([
@@ -125,6 +145,17 @@ export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData 
       .eq('status', 'active')
       .order('sort_order'),
   ]);
+
+  // Erros de RLS/schema não podem sumir em silêncio — a seção some da página
+  const sections: Array<[string, { error: { message: string } | null }]> = [
+    ['ofertas', offersRes],
+    ['quiz', questionsRes],
+    ['regras', rulesRes],
+    ['ativos', assetsRes],
+  ];
+  for (const [name, res] of sections) {
+    if (res.error) console.error(`[SmartBio] Erro ao carregar ${name}:`, res.error.message);
+  }
 
   return {
     smartbio: {
@@ -176,11 +207,14 @@ export function trackEvent(
   eventType: string,
   metadata: Record<string, unknown> = {}
 ): void {
-  supabase.from('analytics_events').insert({
+  // O builder do supabase-js é lazy: sem .then() o insert nunca é enviado
+  void supabase.from('analytics_events').insert({
     tenant_id: tenantId,
     smartbio_id: smartbioId,
     event_type: eventType,
     metadata,
+  }).then(({ error }) => {
+    if (error) console.error('[SmartBio] Falha ao registrar evento:', error.message);
   });
 }
 
@@ -191,12 +225,14 @@ export function insertLead(
   answers: string[],
   ctaClicked: string
 ): void {
-  supabase.from('leads').insert({
+  void supabase.from('leads').insert({
     tenant_id: tenantId,
     smartbio_id: smartbioId,
     recommended_offer_id: recommendedOfferId,
     answers: { quiz_answers: answers },
     cta_clicked: ctaClicked,
     source: 'smartbio_public',
+  }).then(({ error }) => {
+    if (error) console.error('[SmartBio] Falha ao registrar lead:', error.message);
   });
 }

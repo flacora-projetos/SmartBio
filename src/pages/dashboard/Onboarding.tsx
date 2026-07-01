@@ -1,10 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
-import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
-import { OnboardingStepper } from '@/components/onboarding/OnboardingStepper';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Upload, Loader2, Eye, X, Check, Plus } from 'lucide-react';
 import { SmartBioPreviewMock } from '@/components/dashboard/SmartBioPreviewMock';
-import { mockOnboardingSteps } from '@/data/mock';
 import type { PublicSmartBioData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -46,6 +43,79 @@ const initialAnswers: OnboardingDraftAnswers = {
 
 const DRAFT_KEY = 'smartbio_onboarding_draft';
 
+// ── Passos do assistente ──────────────────────────────────────────────────────
+// Um assunto por tela, linguagem simples, sem jargão.
+
+type StepDef = {
+  id: string;
+  type: 'who' | 'about' | 'contacts' | 'objective' | 'audience' | 'offer' | 'quiz' | 'conversion' | 'style' | 'review';
+  title: string;
+  subtitle: string;
+};
+
+const STEPS: StepDef[] = [
+  {
+    id: 'who',
+    type: 'who',
+    title: 'Como você quer aparecer?',
+    subtitle: 'Sua foto e seu nome ficam no topo da página, como no seu perfil do Instagram.',
+  },
+  {
+    id: 'about',
+    type: 'about',
+    title: 'O que você faz?',
+    subtitle: 'Escreva como se estivesse explicando para um cliente: o que você faz e para quem.',
+  },
+  {
+    id: 'contacts',
+    type: 'contacts',
+    title: 'Como falam com você?',
+    subtitle: 'O WhatsApp é por onde seus clientes vão chegar. As redes sociais aparecem como botões na página.',
+  },
+  {
+    id: 'objective',
+    type: 'objective',
+    title: 'O que essa página deve fazer por você?',
+    subtitle: 'Escolha o resultado mais importante. A página inteira será montada em torno disso.',
+  },
+  {
+    id: 'audience',
+    type: 'audience',
+    title: 'Quem é o seu cliente?',
+    subtitle: 'Pense na pessoa que costuma te chamar no WhatsApp. Quanto mais real a descrição, melhor a página fica.',
+  },
+  {
+    id: 'offer',
+    type: 'offer',
+    title: 'O que você vende ou oferece?',
+    subtitle: 'Comece pelo principal — depois você pode adicionar outros produtos e serviços.',
+  },
+  {
+    id: 'quiz',
+    type: 'quiz',
+    title: 'Perguntas para conhecer o visitante',
+    subtitle: 'Sua página faz essas perguntas a quem chega e recomenda a opção certa para cada pessoa. Já deixamos um exemplo pronto — pode usar assim mesmo.',
+  },
+  {
+    id: 'conversion',
+    type: 'conversion',
+    title: 'Para onde o visitante vai no final?',
+    subtitle: 'Depois de responder às perguntas, o visitante toca em um botão. Escolha o que acontece.',
+  },
+  {
+    id: 'style',
+    type: 'style',
+    title: 'Deixe com a sua cara',
+    subtitle: 'Escolha as cores da página. Dá para mudar quando quiser.',
+  },
+  {
+    id: 'review',
+    type: 'review',
+    title: 'Tudo pronto. Vamos revisar?',
+    subtitle: 'Confira se está tudo certo. Depois você ainda vê a página pronta antes de publicar.',
+  },
+];
+
 function extractMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
   if (err && typeof err === 'object') {
@@ -79,6 +149,32 @@ function clearDraft() {
   } catch {}
 }
 
+const inputClass =
+  'w-full px-4 py-3 rounded-xl border border-border bg-background text-base focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 placeholder:text-muted-foreground/60';
+
+function Field({
+  label,
+  hint,
+  optional,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-semibold text-ink flex items-center gap-2">
+        {label}
+        {optional && <span className="text-xs font-normal text-muted-foreground">(se quiser)</span>}
+      </label>
+      {children}
+      {hint && <p className="text-xs text-muted-foreground leading-relaxed">{hint}</p>}
+    </div>
+  );
+}
+
 export function Onboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [answers, setAnswers] = useState<OnboardingDraftAnswers>(() => ({
@@ -91,11 +187,31 @@ export function Onboarding() {
   const [avatarPreview, setAvatarPreview] = useState('');
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [numQuestionsShown, setNumQuestionsShown] = useState(1);
+  const [showMoreSocial, setShowMoreSocial] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const draftTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
   const { tenant, user } = useAuth();
-  const step = mockOnboardingSteps[currentStep];
+  const step = STEPS[currentStep];
+  const isLastStep = currentStep === STEPS.length - 1;
+
+  // A página já foi gerada/publicada? Então isto é uma edição, não uma criação.
+  useEffect(() => {
+    if (!tenant?.id) return;
+    supabase
+      .from('smartbios')
+      .select('status')
+      .eq('tenant_id', tenant.id)
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        const s = data?.status;
+        if (s === 'published' || s === 'preview_pending_approval') setIsEditMode(true);
+      });
+  }, [tenant?.id]);
 
   // Inicializa avatar do usuário (metadados Supabase Auth)
   useEffect(() => {
@@ -199,14 +315,32 @@ export function Onboarding() {
     };
   }, [answers]);
 
+  // Ao trocar de passo, volta o scroll para o topo do conteúdo
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+    window.scrollTo({ top: 0 });
+  }, [currentStep]);
+
   const updateAnswer = <Key extends keyof OnboardingDraftAnswers>(key: Key, value: OnboardingDraftAnswers[Key]) => {
     setAnswers((current) => ({ ...current, [key]: value }));
   };
 
+  // Validação leve por passo: só o essencial é obrigatório
+  const stepBlockReason = (() => {
+    if (step.type === 'who' && !answers.brandName.trim()) {
+      return 'Preencha seu nome ou o nome da sua marca para continuar.';
+    }
+    if (step.type === 'contacts' && !answers.whatsapp.trim()) {
+      return 'Informe seu WhatsApp — é por ele que seus clientes vão falar com você.';
+    }
+    return null;
+  })();
+
   const handleNext = async () => {
     setErrorMessage(null);
+    if (stepBlockReason) return;
 
-    if (currentStep < mockOnboardingSteps.length - 1) {
+    if (!isLastStep) {
       setCurrentStep((current) => current + 1);
       return;
     }
@@ -240,7 +374,7 @@ export function Onboarding() {
       navigate('/app/preview');
     } catch (error) {
       console.error('[Onboarding] generateInitialPreview falhou:', error);
-      setErrorMessage(`Erro ao gerar preview: ${extractMessage(error)}`);
+      setErrorMessage(`Erro ao gerar sua página: ${extractMessage(error)}`);
     } finally {
       setIsGenerating(false);
     }
@@ -252,34 +386,10 @@ export function Onboarding() {
     }
   };
 
-  const updateDiagnosticOption = (index: number, value: string) => {
-    const nextOptions = [...answers.diagnosticOptions];
-    nextOptions[index] = value;
-    updateAnswer('diagnosticOptions', nextOptions);
-  };
-
-  const updateDiagnosticOption2 = (index: number, value: string) => {
-    const nextOptions = [...answers.diagnosticOptions2];
-    nextOptions[index] = value;
-    updateAnswer('diagnosticOptions2', nextOptions);
-  };
-
-  const updateDiagnosticOption3 = (index: number, value: string) => {
-    const nextOptions = [...answers.diagnosticOptions3];
-    nextOptions[index] = value;
-    updateAnswer('diagnosticOptions3', nextOptions);
-  };
-
-  const updateDiagnosticOption4 = (index: number, value: string) => {
-    const nextOptions = [...answers.diagnosticOptions4];
-    nextOptions[index] = value;
-    updateAnswer('diagnosticOptions4', nextOptions);
-  };
-
-  const updateDiagnosticOption5 = (index: number, value: string) => {
-    const nextOptions = [...answers.diagnosticOptions5];
-    nextOptions[index] = value;
-    updateAnswer('diagnosticOptions5', nextOptions);
+  const updateOptionAt = (key: 'diagnosticOptions' | 'diagnosticOptions2' | 'diagnosticOptions3' | 'diagnosticOptions4' | 'diagnosticOptions5', index: number, value: string) => {
+    const next = [...answers[key]];
+    next[index] = value;
+    updateAnswer(key, next);
   };
 
   const removeQuestion = (n: number) => {
@@ -319,12 +429,14 @@ export function Onboarding() {
     }
   };
 
+  // ── Conteúdo de cada passo ─────────────────────────────────────────────────
+
   const renderStepContent = () => {
     switch (step.type) {
-      case 'identity':
+      case 'who':
         return (
           <div className="space-y-6">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-3">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -336,11 +448,11 @@ export function Onboarding() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingAvatar}
-                className="w-20 h-20 rounded-full bg-surface border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors shrink-0 overflow-hidden relative"
+                className="w-28 h-28 rounded-full bg-surface border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:border-primary/50 hover:bg-muted/40 transition-colors shrink-0 overflow-hidden relative"
               >
                 {avatarPreview ? (
                   <>
-                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={avatarPreview} alt="Sua foto" className="w-full h-full object-cover" />
                     {isUploadingAvatar && (
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
                         <Loader2 className="w-5 h-5 text-white animate-spin" />
@@ -349,207 +461,254 @@ export function Onboarding() {
                   </>
                 ) : (
                   <>
-                    {isUploadingAvatar ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6 mb-1" />}
-                    {!isUploadingAvatar && <span className="text-[10px]">Foto</span>}
+                    {isUploadingAvatar ? <Loader2 className="w-7 h-7 animate-spin" /> : <Upload className="w-7 h-7 mb-1" />}
+                    {!isUploadingAvatar && <span className="text-xs font-medium">Adicionar foto</span>}
                   </>
                 )}
               </button>
-              <div className="flex-1 space-y-2">
-                <label className="text-sm font-medium text-ink">Nome da marca ou profissional</label>
-                <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.brandName} onChange={(event) => updateAnswer('brandName', event.target.value)} placeholder="Ex: Ana Souza Consultoria" />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Bio curta</label>
-              <textarea className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px]" value={answers.shortBio} onChange={(event) => updateAnswer('shortBio', event.target.value)} placeholder="Ex: ajudo empreendedores a venderem mais com clareza e posicionamento" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Nicho ou posicionamento</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.niche} onChange={(event) => updateAnswer('niche', event.target.value)} placeholder="Ex: consultoria imobiliaria, mentoria, clinica, infoproduto" />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="text-xs text-primary font-medium hover:underline"
+              >
+                {avatarPreview ? 'Trocar foto' : 'Escolher da galeria'}
+              </button>
             </div>
 
-            <div className="space-y-3 pt-2 border-t border-border">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Contato e redes sociais</p>
+            <Field
+              label="Seu nome ou o nome da sua marca"
+              hint="É o título da sua página. Ex: Ana Souza, Studio Bella, Clínica Vida."
+            >
+              <input
+                className={inputClass}
+                value={answers.brandName}
+                onChange={(event) => updateAnswer('brandName', event.target.value)}
+                placeholder="Ex: Ana Souza Consultoria"
+                autoFocus
+              />
+            </Field>
+          </div>
+        );
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-ink">WhatsApp <span className="text-destructive">*</span></label>
-                <input
-                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  value={answers.whatsapp}
-                  onChange={(e) => updateAnswer('whatsapp', e.target.value)}
-                  placeholder="5511999999999 (com DDD, sem espaços)"
-                  type="tel"
-                />
-                <p className="text-xs text-muted-foreground">Usado no botão do WhatsApp da página pública.</p>
-              </div>
+      case 'about':
+        return (
+          <div className="space-y-6">
+            <Field
+              label="Descreva o que você faz em uma ou duas frases"
+              hint="Essa frase aparece logo abaixo do seu nome, como a bio do Instagram."
+            >
+              <textarea
+                className={`${inputClass} min-h-[110px] resize-none`}
+                value={answers.shortBio}
+                onChange={(event) => updateAnswer('shortBio', event.target.value)}
+                placeholder="Ex: Ajudo mulheres a se sentirem confiantes com roupas sob medida. Atendo em Goiânia e envio para todo o Brasil."
+              />
+            </Field>
+            <Field
+              label="Qual é a sua área?"
+              hint="Ex: moda feminina, odontologia, imóveis, comida saudável, estética..."
+            >
+              <input
+                className={inputClass}
+                value={answers.niche}
+                onChange={(event) => updateAnswer('niche', event.target.value)}
+                placeholder="Ex: moda feminina"
+              />
+            </Field>
+          </div>
+        );
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-ink">Instagram</label>
+      case 'contacts':
+        return (
+          <div className="space-y-6">
+            <Field
+              label="Seu WhatsApp"
+              hint="Digite com DDD, só números. Ex: 62999465725. É para ele que os clientes serão enviados."
+            >
+              <input
+                className={inputClass}
+                value={answers.whatsapp}
+                onChange={(e) => updateAnswer('whatsapp', e.target.value)}
+                placeholder="62999999999"
+                type="tel"
+                inputMode="numeric"
+              />
+            </Field>
+
+            <Field label="Seu Instagram" optional>
+              <input
+                className={inputClass}
+                value={answers.instagram}
+                onChange={(e) => updateAnswer('instagram', e.target.value)}
+                placeholder="@seuperfil"
+              />
+            </Field>
+
+            {!showMoreSocial ? (
+              <button
+                type="button"
+                onClick={() => setShowMoreSocial(true)}
+                className="flex items-center gap-2 text-sm text-primary font-medium hover:underline"
+              >
+                <Plus className="w-4 h-4" /> Adicionar TikTok, YouTube ou site
+              </button>
+            ) : (
+              <div className="space-y-4 p-4 rounded-2xl bg-surface border border-border">
+                <Field label="TikTok" optional>
                   <input
-                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                    value={answers.instagram}
-                    onChange={(e) => updateAnswer('instagram', e.target.value)}
-                    placeholder="@seuhandle"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-ink">TikTok <span className="text-muted-foreground text-xs">(opcional)</span></label>
-                  <input
-                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className={inputClass}
                     value={answers.tiktok}
                     onChange={(e) => updateAnswer('tiktok', e.target.value)}
-                    placeholder="@seuhandle"
+                    placeholder="@seuperfil"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-ink">YouTube <span className="text-muted-foreground text-xs">(opcional)</span></label>
+                </Field>
+                <Field label="YouTube" optional>
                   <input
-                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className={inputClass}
                     value={answers.youtube}
                     onChange={(e) => updateAnswer('youtube', e.target.value)}
-                    placeholder="https://youtube.com/@canal"
+                    placeholder="https://youtube.com/@seucanal"
                   />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-ink">Site <span className="text-muted-foreground text-xs">(opcional)</span></label>
+                </Field>
+                <Field label="Site" optional>
                   <input
-                    className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    className={inputClass}
                     value={answers.site}
                     onChange={(e) => updateAnswer('site', e.target.value)}
                     placeholder="https://seusite.com.br"
                   />
-                </div>
+                </Field>
               </div>
-            </div>
+            )}
           </div>
         );
 
       case 'objective':
         return (
-          <div className="space-y-4">
-            <div className="flex flex-wrap gap-2">
-              {['Vender uma oferta', 'Captar leads', 'Qualificar interessados', 'Agendar atendimento'].map((suggestion) => (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { value: 'Vender uma oferta', label: 'Vender', desc: 'Levar o visitante direto para a compra' },
+                { value: 'Captar leads', label: 'Receber contatos', desc: 'Guardar nome e interesse de quem visita' },
+                { value: 'Qualificar interessados', label: 'Filtrar interessados', desc: 'Saber o que cada visitante procura' },
+                { value: 'Agendar atendimento', label: 'Agendar horários', desc: 'Receber pedidos de agendamento' },
+              ].map(({ value, label, desc }) => (
                 <button
-                  key={suggestion}
+                  key={value}
                   type="button"
-                  onClick={() => updateAnswer('objective', suggestion)}
-                  className={`px-4 py-2 rounded-xl border-2 text-sm font-medium transition-colors cursor-pointer ${answers.objective === suggestion ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-muted-foreground'}`}
+                  onClick={() => updateAnswer('objective', value)}
+                  className={`p-4 rounded-2xl border-2 text-left transition-colors cursor-pointer ${
+                    answers.objective === value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-surface hover:border-primary/40'
+                  }`}
                 >
-                  {suggestion}
+                  <span className="flex items-center justify-between">
+                    <span className={`text-sm font-bold ${answers.objective === value ? 'text-primary' : 'text-ink'}`}>{label}</span>
+                    {answers.objective === value && <Check className="w-4 h-4 text-primary" />}
+                  </span>
+                  <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">{desc}</span>
                 </button>
               ))}
             </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Ou descreva com suas próprias palavras</label>
+            <Field label="Ou escreva com suas palavras" optional>
               <input
-                className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className={inputClass}
                 value={answers.objective}
                 onChange={(e) => updateAnswer('objective', e.target.value)}
-                placeholder="Ex: quero agendar consultas para meu consultório odontológico"
+                placeholder="Ex: quero agendar consultas para meu consultório"
               />
-            </div>
+            </Field>
           </div>
         );
 
       case 'audience':
         return (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Visitante ideal</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.audience} onChange={(event) => updateAnswer('audience', event.target.value)} placeholder="Ex: empreendedores que precisam vender com mais clareza" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Principal dor desse visitante</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.pain} onChange={(event) => updateAnswer('pain', event.target.value)} placeholder="Ex: chega interessado, mas nao sabe qual oferta escolher" />
-            </div>
-          </div>
-        );
-
-      case 'offers':
-        return (
           <div className="space-y-6">
-            <p className="text-sm text-muted-foreground">{step.description}</p>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Oferta principal</label>
-              <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.offerTitle} onChange={(event) => updateAnswer('offerTitle', event.target.value)} placeholder="Ex: Consultoria inicial, diagnostico, mentoria, produto principal" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Descricao da oferta</label>
-              <textarea className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[120px]" value={answers.offerDescription} onChange={(event) => updateAnswer('offerDescription', event.target.value)} placeholder="Explique o que essa oferta resolve e para quem ela serve." />
-            </div>
-          </div>
-        );
-
-      case 'diagnostic': {
-        const titleSuggestions = [
-          'Diagnóstico Inteligente',
-          'Qual é o seu perfil?',
-          'Me conta sobre você',
-          'Encontre sua solução',
-          'Para quem é isso?',
-        ];
-        const inputClass = 'w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 text-sm';
-
-        return (
-          <div className="space-y-6">
-            {/* Título */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Título do diagnóstico</label>
-              <div className="flex flex-wrap gap-2 mb-2">
-                {titleSuggestions.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => updateAnswer('diagnosticTitle', s)}
-                    className={`px-3 py-1 rounded-xl border text-xs font-medium transition-colors cursor-pointer ${
-                      answers.diagnosticTitle === s
-                        ? 'border-primary bg-primary/5 text-primary'
-                        : 'border-border bg-surface hover:border-primary/50 text-muted-foreground'
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <input className={inputClass} value={answers.diagnosticTitle} onChange={(e) => updateAnswer('diagnosticTitle', e.target.value)} placeholder="Ex: Diagnóstico Inteligente" />
-            </div>
-
-            {/* Pergunta 1 */}
-            <div className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta 1</p>
+            <Field
+              label="Quem costuma te procurar?"
+              hint="Ex: mulheres de 30 a 50 anos que querem emagrecer com saúde."
+            >
               <input
                 className={inputClass}
-                value={answers.diagnosticQuestion}
-                onChange={(e) => updateAnswer('diagnosticQuestion', e.target.value)}
-                placeholder="Ex: Qual é o seu principal objetivo hoje?"
+                value={answers.audience}
+                onChange={(event) => updateAnswer('audience', event.target.value)}
+                placeholder="Ex: noivas procurando vestido sob medida"
               />
-              <div className="space-y-2">
-                <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
-                {answers.diagnosticOptions.map((option, index) => (
-                  <input
-                    key={index}
-                    className={inputClass}
-                    value={option}
-                    onChange={(e) => updateDiagnosticOption(index, e.target.value)}
-                    placeholder={`Opção ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
+            </Field>
+            <Field
+              label="Qual é a maior dúvida ou dificuldade dessa pessoa?"
+              hint="É o que ela está sentindo quando chega na sua página."
+            >
+              <input
+                className={inputClass}
+                value={answers.pain}
+                onChange={(event) => updateAnswer('pain', event.target.value)}
+                placeholder="Ex: não sabe qual modelo combina com o corpo dela"
+              />
+            </Field>
+          </div>
+        );
 
-            {/* Perguntas adicionais (2-5) */}
-            {([
-              { n: 2, question: answers.diagnosticQuestion2, options: answers.diagnosticOptions2, updateQ: (v: string) => updateAnswer('diagnosticQuestion2', v), updateO: updateDiagnosticOption2, prevQuestion: answers.diagnosticQuestion },
-              { n: 3, question: answers.diagnosticQuestion3, options: answers.diagnosticOptions3, updateQ: (v: string) => updateAnswer('diagnosticQuestion3', v), updateO: updateDiagnosticOption3, prevQuestion: answers.diagnosticQuestion2 },
-              { n: 4, question: answers.diagnosticQuestion4, options: answers.diagnosticOptions4, updateQ: (v: string) => updateAnswer('diagnosticQuestion4', v), updateO: updateDiagnosticOption4, prevQuestion: answers.diagnosticQuestion3 },
-              { n: 5, question: answers.diagnosticQuestion5, options: answers.diagnosticOptions5, updateQ: (v: string) => updateAnswer('diagnosticQuestion5', v), updateO: updateDiagnosticOption5, prevQuestion: answers.diagnosticQuestion4 },
-            ] as const).map(({ n, question, options, updateQ, updateO, prevQuestion }) => (
-              numQuestionsShown >= n ? (
-                <div key={n} className="space-y-3 p-4 rounded-2xl border border-border bg-surface/50">
+      case 'offer':
+        return (
+          <div className="space-y-6">
+            <Field
+              label="Nome do seu principal produto ou serviço"
+              hint="É o que a página vai recomendar para os visitantes."
+            >
+              <input
+                className={inputClass}
+                value={answers.offerTitle}
+                onChange={(event) => updateAnswer('offerTitle', event.target.value)}
+                placeholder="Ex: Consulta de avaliação, Vestido sob medida, Plano mensal"
+              />
+            </Field>
+            <Field
+              label="Explique em poucas frases o que ele resolve"
+              hint="Escreva como você explicaria para um cliente no WhatsApp."
+            >
+              <textarea
+                className={`${inputClass} min-h-[120px] resize-none`}
+                value={answers.offerDescription}
+                onChange={(event) => updateAnswer('offerDescription', event.target.value)}
+                placeholder="Ex: Uma conversa de 30 minutos onde eu entendo o que você precisa e monto um plano personalizado."
+              />
+            </Field>
+          </div>
+        );
+
+      case 'quiz': {
+        const questionBlocks = [
+          { n: 1, question: answers.diagnosticQuestion, optKey: 'diagnosticOptions' as const, options: answers.diagnosticOptions, qKey: 'diagnosticQuestion' as const },
+          { n: 2, question: answers.diagnosticQuestion2, optKey: 'diagnosticOptions2' as const, options: answers.diagnosticOptions2, qKey: 'diagnosticQuestion2' as const },
+          { n: 3, question: answers.diagnosticQuestion3, optKey: 'diagnosticOptions3' as const, options: answers.diagnosticOptions3, qKey: 'diagnosticQuestion3' as const },
+          { n: 4, question: answers.diagnosticQuestion4, optKey: 'diagnosticOptions4' as const, options: answers.diagnosticOptions4, qKey: 'diagnosticQuestion4' as const },
+          { n: 5, question: answers.diagnosticQuestion5, optKey: 'diagnosticOptions5' as const, options: answers.diagnosticOptions5, qKey: 'diagnosticQuestion5' as const },
+        ];
+
+        return (
+          <div className="space-y-5">
+            {questionBlocks.map(({ n, question, optKey, options, qKey }) => {
+              if (n > numQuestionsShown) {
+                const prev = questionBlocks[n - 2];
+                const canAdd = n === numQuestionsShown + 1 && prev.question?.trim();
+                return canAdd ? (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setNumQuestionsShown(n)}
+                    className="w-full py-3 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" /> Adicionar outra pergunta
+                  </button>
+                ) : null;
+              }
+              return (
+                <div key={n} className="space-y-3 p-4 sm:p-5 rounded-2xl border border-border bg-surface">
                   <div className="flex items-center justify-between">
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Pergunta {n}</p>
-                    {n === numQuestionsShown && (
+                    <p className="text-xs font-bold uppercase tracking-wider text-primary">Pergunta {n}</p>
+                    {n > 1 && n === numQuestionsShown && (
                       <button type="button" onClick={() => removeQuestion(n)} className="text-xs text-destructive hover:underline cursor-pointer">
                         Remover
                       </button>
@@ -558,56 +717,45 @@ export function Onboarding() {
                   <input
                     className={inputClass}
                     value={question}
-                    onChange={(e) => updateQ(e.target.value)}
-                    placeholder="Ex: Qual é o seu nível de experiência?"
+                    onChange={(e) => updateAnswer(qKey, e.target.value)}
+                    placeholder="Ex: O que você está procurando hoje?"
                   />
                   <div className="space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">Opções de resposta</p>
+                    <p className="text-xs font-medium text-muted-foreground">Respostas que o visitante pode escolher</p>
                     {options.map((option, index) => (
                       <input
                         key={index}
                         className={inputClass}
                         value={option}
-                        onChange={(e) => updateO(index, e.target.value)}
-                        placeholder={`Opção ${index + 1}`}
+                        onChange={(e) => updateOptionAt(optKey, index, e.target.value)}
+                        placeholder={`Resposta ${index + 1}`}
                       />
                     ))}
                   </div>
                 </div>
-              ) : (
-                numQuestionsShown === n - 1 && prevQuestion?.trim() && numQuestionsShown < 5 ? (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setNumQuestionsShown(n)}
-                    className="w-full py-2.5 rounded-2xl border border-dashed border-border text-sm text-muted-foreground hover:border-primary/50 hover:text-primary transition-colors cursor-pointer"
-                  >
-                    + Adicionar pergunta {n} <span className="text-xs opacity-60">(máx. 5)</span>
-                  </button>
-                ) : null
-              )
-            ))}
+              );
+            })}
           </div>
         );
       }
 
       case 'conversion': {
-        const destOptions: { value: string; label: string; buttonDefault: string }[] = [
-          { value: 'whatsapp', label: 'WhatsApp', buttonDefault: 'Falar no WhatsApp' },
-          { value: 'agenda', label: 'Agenda', buttonDefault: 'Agendar agora' },
-          { value: 'formulario', label: 'Formulário', buttonDefault: 'Preencher formulário' },
-          { value: 'checkout', label: 'Checkout', buttonDefault: 'Comprar agora' },
+        const destOptions: { value: string; label: string; desc: string; buttonDefault: string }[] = [
+          { value: 'whatsapp', label: 'WhatsApp', desc: 'O visitante abre uma conversa com você', buttonDefault: 'Falar no WhatsApp' },
+          { value: 'agenda', label: 'Agenda', desc: 'O visitante marca um horário', buttonDefault: 'Agendar agora' },
+          { value: 'formulario', label: 'Formulário', desc: 'O visitante preenche seus dados', buttonDefault: 'Preencher formulário' },
+          { value: 'checkout', label: 'Página de compra', desc: 'O visitante vai direto para pagar', buttonDefault: 'Comprar agora' },
         ];
 
         const ctaFieldLabel: Record<string, string> = {
-          whatsapp: 'Mensagem de abertura',
-          agenda: 'Link da agenda (Calendly, Cal.com, etc.)',
-          formulario: 'Link do formulário',
-          checkout: 'Link do checkout',
+          whatsapp: 'Mensagem que o visitante já vai enviar pronta',
+          agenda: 'Link da sua agenda (Calendly, Cal.com...)',
+          formulario: 'Link do seu formulário',
+          checkout: 'Link da página de compra',
         };
 
         const ctaFieldPlaceholder: Record<string, string> = {
-          whatsapp: 'Ex: Olá! Acabei de fazer o diagnóstico e gostaria de saber mais.',
+          whatsapp: 'Ex: Olá! Vim pela sua página e quero saber mais.',
           agenda: 'https://calendly.com/seuperfil',
           formulario: 'https://forms.google.com/...',
           checkout: 'https://pay.hotmart.com/...',
@@ -615,241 +763,316 @@ export function Onboarding() {
 
         return (
           <div className="space-y-6">
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-ink">Destino final do CTA</label>
-              <div className="grid grid-cols-2 gap-3">
-                {destOptions.map(({ value, label, buttonDefault }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => setAnswers(prev => ({
-                      ...prev,
-                      conversionDestination: value,
-                      buttonText: buttonDefault,
-                      conversionMessage: value === 'whatsapp' ? '' : '',
-                    }))}
-                    className={`p-3 rounded-xl border-2 text-center cursor-pointer text-sm font-medium ${answers.conversionDestination === value ? 'border-primary bg-primary/5 text-primary' : 'border-border bg-surface hover:border-primary/50 text-ink'}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {destOptions.map(({ value, label, desc, buttonDefault }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setAnswers(prev => ({
+                    ...prev,
+                    conversionDestination: value,
+                    buttonText: buttonDefault,
+                  }))}
+                  className={`p-4 rounded-2xl border-2 text-left cursor-pointer transition-colors ${
+                    answers.conversionDestination === value
+                      ? 'border-primary bg-primary/5'
+                      : 'border-border bg-surface hover:border-primary/40'
+                  }`}
+                >
+                  <span className="flex items-center justify-between">
+                    <span className={`text-sm font-bold ${answers.conversionDestination === value ? 'text-primary' : 'text-ink'}`}>{label}</span>
+                    {answers.conversionDestination === value && <Check className="w-4 h-4 text-primary" />}
+                  </span>
+                  <span className="block text-xs text-muted-foreground mt-1 leading-relaxed">{desc}</span>
+                </button>
+              ))}
             </div>
 
-            {answers.conversionDestination === 'whatsapp' && (
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-ink">Número do WhatsApp</label>
-                <input
-                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
-                  value={answers.whatsapp}
-                  onChange={(e) => updateAnswer('whatsapp', e.target.value)}
-                  placeholder="5511999999999 (com DDD, sem espaços)"
-                  type="tel"
-                />
-                <p className="text-xs text-muted-foreground">Sincronizado com o número informado na identidade.</p>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">
-                {ctaFieldLabel[answers.conversionDestination] ?? 'Destino do CTA'}
-              </label>
+            <Field label={ctaFieldLabel[answers.conversionDestination] ?? 'Destino do botão'}>
               {answers.conversionDestination === 'whatsapp' ? (
                 <textarea
-                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 h-24"
+                  className={`${inputClass} h-24 resize-none`}
                   value={answers.conversionMessage}
                   onChange={(e) => updateAnswer('conversionMessage', e.target.value)}
                   placeholder={ctaFieldPlaceholder.whatsapp}
                 />
               ) : (
                 <input
-                  className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className={inputClass}
                   value={answers.conversionMessage}
                   onChange={(e) => updateAnswer('conversionMessage', e.target.value)}
                   placeholder={ctaFieldPlaceholder[answers.conversionDestination] ?? ''}
                   type="url"
                 />
               )}
-            </div>
+            </Field>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-ink">Texto do botão final</label>
+            <Field label="Texto do botão" hint="É o botão que o visitante toca no final.">
               <input
-                className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className={inputClass}
                 value={answers.buttonText}
                 onChange={(e) => updateAnswer('buttonText', e.target.value)}
               />
-            </div>
+            </Field>
           </div>
         );
       }
 
       case 'style':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div className="space-y-3">
-              <label className="text-sm font-medium text-ink">Tema visual</label>
+              <label className="text-sm font-semibold text-ink">Fundo da página</label>
               <div className="grid grid-cols-2 gap-3">
-                <button type="button" onClick={() => updateAnswer('theme', 'light')} className={`p-4 rounded-xl border-2 ${answers.theme === 'light' ? 'border-primary' : 'border-border'} bg-background cursor-pointer flex flex-col items-center gap-2`}>
-                  <div className="w-8 h-8 rounded-full bg-background border border-border shadow-sm" />
-                  <span className="text-xs font-bold text-primary">Claro</span>
+                <button type="button" onClick={() => updateAnswer('theme', 'light')} className={`p-5 rounded-2xl border-2 ${answers.theme === 'light' ? 'border-primary ring-2 ring-primary/20' : 'border-border'} bg-white cursor-pointer flex flex-col items-center gap-2`}>
+                  <div className="w-10 h-10 rounded-full bg-white border border-border shadow-sm" />
+                  <span className="text-sm font-bold text-neutral-900">Claro</span>
                 </button>
-                <button type="button" onClick={() => updateAnswer('theme', 'dark')} className={`p-4 rounded-xl border-2 ${answers.theme === 'dark' ? 'border-primary' : 'border-border'} bg-ink cursor-pointer flex flex-col items-center gap-2`}>
-                  <div className="w-8 h-8 rounded-full bg-ink border border-surface" />
-                  <span className="text-xs font-bold text-surface">Escuro</span>
+                <button type="button" onClick={() => updateAnswer('theme', 'dark')} className={`p-5 rounded-2xl border-2 ${answers.theme === 'dark' ? 'border-primary ring-2 ring-primary/20' : 'border-border'} bg-neutral-900 cursor-pointer flex flex-col items-center gap-2`}>
+                  <div className="w-10 h-10 rounded-full bg-neutral-800 border border-neutral-700" />
+                  <span className="text-sm font-bold text-white">Escuro</span>
                 </button>
               </div>
             </div>
             <div className="space-y-3">
-              <label className="text-sm font-medium text-ink">Cor de destaque da marca</label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={answers.accentColor}
-                  onChange={(e) => updateAnswer('accentColor', e.target.value)}
-                  className="w-12 h-12 rounded-xl border border-border cursor-pointer p-1 bg-transparent"
-                />
-                <input
-                  type="text"
-                  value={answers.accentColor.toUpperCase()}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (/^#[0-9A-Fa-f]{0,6}$/.test(val)) updateAnswer('accentColor', val);
-                  }}
-                  className="flex-1 px-4 py-2 rounded-xl border border-border bg-background font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 uppercase"
-                  placeholder="#000000"
-                  maxLength={7}
-                />
-                <div className="w-12 h-12 rounded-xl border border-border shrink-0" style={{ backgroundColor: answers.accentColor }} />
-              </div>
-              <p className="text-xs text-muted-foreground">Sugestões rápidas:</p>
-              <div className="flex gap-2 flex-wrap">
+              <label className="text-sm font-semibold text-ink">Cor da sua marca</label>
+              <div className="flex gap-3 flex-wrap">
                 {['#000000', '#2563EB', '#16A34A', '#D97706', '#DB2777', '#7C3AED', '#DC2626'].map((color) => (
                   <button
                     key={color}
                     type="button"
                     aria-label={color}
                     onClick={() => updateAnswer('accentColor', color)}
-                    className={`w-8 h-8 rounded-full cursor-pointer transition-all hover:scale-110 ${answers.accentColor.toUpperCase() === color ? 'ring-2 ring-offset-2 ring-primary' : ''}`}
+                    className={`w-11 h-11 rounded-full cursor-pointer transition-all hover:scale-110 ${answers.accentColor.toUpperCase() === color ? 'ring-2 ring-offset-2 ring-primary scale-110' : ''}`}
                     style={{ backgroundColor: color }}
                   />
                 ))}
+              </div>
+              <div className="flex items-center gap-3 pt-1">
+                <input
+                  type="color"
+                  value={answers.accentColor}
+                  onChange={(e) => updateAnswer('accentColor', e.target.value)}
+                  className="w-12 h-12 rounded-xl border border-border cursor-pointer p-1 bg-transparent shrink-0"
+                  title="Escolher outra cor"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Não achou a sua cor? Toque no quadrado para escolher qualquer uma.
+                </p>
               </div>
             </div>
           </div>
         );
 
-      case 'review':
+      case 'review': {
+        const numQuestions = [answers.diagnosticQuestion, answers.diagnosticQuestion2, answers.diagnosticQuestion3, answers.diagnosticQuestion4, answers.diagnosticQuestion5].filter(q => q?.trim()).length;
+        const destLabels: Record<string, string> = {
+          whatsapp: 'WhatsApp', agenda: 'Agenda', formulario: 'Formulário', checkout: 'Página de compra',
+        };
+        const reviewItems = [
+          { label: 'Nome', value: answers.brandName || '— preencher', ok: Boolean(answers.brandName.trim()), goTo: 0 },
+          { label: 'O que você faz', value: answers.shortBio || 'A plataforma escreve para você', ok: true, goTo: 1 },
+          { label: 'WhatsApp', value: answers.whatsapp || '— preencher', ok: Boolean(answers.whatsapp.trim()), goTo: 2 },
+          { label: 'Objetivo', value: answers.objective, ok: true, goTo: 3 },
+          { label: 'Produto ou serviço', value: answers.offerTitle || 'A plataforma monta um exemplo inicial', ok: true, goTo: 5 },
+          { label: 'Perguntas do quiz', value: `${numQuestions} pergunta${numQuestions !== 1 ? 's' : ''}`, ok: numQuestions > 0, goTo: 6 },
+          { label: 'Botão final', value: `${answers.buttonText} → ${destLabels[answers.conversionDestination] ?? answers.conversionDestination}`, ok: true, goTo: 7 },
+          { label: 'Aparência', value: answers.theme === 'light' ? 'Fundo claro' : 'Fundo escuro', ok: true, goTo: 8 },
+        ];
+
         return (
-          <div className="space-y-6">
-            <p className="text-sm text-muted-foreground">{step.description}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { label: 'Identidade', value: answers.brandName || 'A preencher' },
-                { label: 'Objetivo', value: answers.objective },
-                { label: 'Oferta', value: answers.offerTitle || 'Oferta inicial sera gerada' },
-                { label: 'Diagnostico', value: (() => { const n = [answers.diagnosticQuestion, answers.diagnosticQuestion2, answers.diagnosticQuestion3, answers.diagnosticQuestion4, answers.diagnosticQuestion5].filter(q => q?.trim()).length; return n > 0 ? `${n} pergunta${n > 1 ? 's' : ''}` : 'Pendente'; })() },
-                { label: 'Conversao', value: answers.conversionDestination },
-                { label: 'Estilo', value: answers.theme === 'light' ? 'Claro' : 'Escuro' },
-              ].map((item) => (
-                <div key={item.label} className="p-3 rounded-xl border border-border bg-surface flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
-                    <p className="text-sm font-bold text-ink">{item.value}</p>
-                  </div>
-                  <div className="w-2 h-2 rounded-full bg-success" />
+          <div className="space-y-3">
+            {reviewItems.map((item) => (
+              <button
+                type="button"
+                key={item.label}
+                onClick={() => setCurrentStep(item.goTo)}
+                className="w-full p-4 rounded-2xl border border-border bg-surface flex items-center justify-between gap-3 text-left hover:border-primary/40 transition-colors cursor-pointer"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
+                  <p className="text-sm font-bold text-ink truncate">{item.value}</p>
                 </div>
-              ))}
-            </div>
+                <span className={`text-xs font-medium shrink-0 ${item.ok ? 'text-success' : 'text-warning'}`}>
+                  {item.ok ? <Check className="w-4 h-4" /> : 'revisar'}
+                </span>
+              </button>
+            ))}
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              Toque em qualquer item para voltar e ajustar.
+            </p>
           </div>
         );
+      }
 
       default:
         return null;
     }
   };
 
+  // ── Preview data ───────────────────────────────────────────────────────────
+
+  const previewData = {
+    tenantName: answers.brandName || 'Sua marca',
+    title: answers.brandName || 'Seu nome aqui',
+    bio: answers.shortBio || null,
+    theme: answers.theme,
+    avatarUrl: avatarPreview || null,
+    socialLinks: {},
+    offers: answers.offerTitle
+      ? [{ title: answers.offerTitle, description: answers.offerDescription } as unknown as PublicSmartBioData['offers'][0]]
+      : [],
+    quizQuestions: [
+      { q: answers.diagnosticQuestion, opts: answers.diagnosticOptions },
+      { q: answers.diagnosticQuestion2, opts: answers.diagnosticOptions2 },
+      { q: answers.diagnosticQuestion3, opts: answers.diagnosticOptions3 },
+      { q: answers.diagnosticQuestion4, opts: answers.diagnosticOptions4 },
+      { q: answers.diagnosticQuestion5, opts: answers.diagnosticOptions5 },
+    ]
+      .filter(({ q }) => q?.trim())
+      .map(({ q, opts }) => ({ question: q, options: opts.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0])),
+  };
+
+  const progressPct = Math.round(((currentStep + 1) / STEPS.length) * 100);
+  const finalButtonLabel = isEditMode ? 'Salvar e ver como ficou' : 'Criar minha página';
+  const generatingLabel = isEditMode ? 'Salvando...' : 'Montando sua página...';
+
+  // ── Layout ─────────────────────────────────────────────────────────────────
+
   return (
-    <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-8rem)]">
-        <div className="mb-8 shrink-0">
-          <h1 className="text-3xl font-heading font-bold text-ink">Onboarding Guiado</h1>
-          <p className="text-muted-foreground mt-2">Responda as perguntas e a SmartBio monta tudo para você.</p>
+    <div className="min-h-screen bg-background flex flex-col">
+      {/* Barra superior */}
+      <header className="h-14 border-b border-border bg-surface px-4 sm:px-6 flex items-center justify-between shrink-0 sticky top-0 z-30">
+        <div className="flex items-center gap-2 font-heading font-bold text-ink">
+          <div className="w-6 h-6 rounded bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">SB</div>
+          <span className="hidden sm:inline">SmartBio</span>
         </div>
+        <div className="flex items-center gap-3">
+          <span className={`text-xs text-muted-foreground transition-opacity duration-500 ${draftSaved ? 'opacity-100' : 'opacity-0'}`}>
+            Salvo ✓
+          </span>
+          <Link
+            to="/app"
+            className="text-sm text-muted-foreground hover:text-ink transition-colors flex items-center gap-1.5"
+          >
+            <X className="w-4 h-4" />
+            <span className="hidden sm:inline">{isEditMode ? 'Sair da edição' : 'Continuar depois'}</span>
+          </Link>
+        </div>
+      </header>
 
-        <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
-          <div className="flex-1 flex flex-col bg-surface border border-border rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-border bg-background/50">
-              <OnboardingStepper
-                steps={mockOnboardingSteps.map((onboardingStep) => ({ id: onboardingStep.id, title: onboardingStep.title }))}
-                currentStepIndex={currentStep}
-                onStepClick={setCurrentStep}
-              />
+      {/* Barra de progresso */}
+      <div className="shrink-0 bg-surface border-b border-border px-4 sm:px-6 py-3 sticky top-14 z-30">
+        <div className="max-w-5xl mx-auto flex items-center gap-4">
+          <p className="text-xs font-bold text-primary whitespace-nowrap">
+            Passo {currentStep + 1} de {STEPS.length}
+          </p>
+          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-primary rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Conteúdo */}
+      <div className="flex-1 flex justify-center px-4 sm:px-6 py-6 sm:py-10">
+        <div className="w-full max-w-5xl flex gap-10 items-start">
+
+          {/* Coluna do formulário */}
+          <div className="flex-1 max-w-xl mx-auto lg:mx-0" ref={contentRef}>
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold text-ink leading-tight">{step.title}</h1>
+              <p className="text-muted-foreground text-sm sm:text-base mt-2 leading-relaxed">{step.subtitle}</p>
             </div>
 
-            <div className="flex-1 p-6 overflow-y-auto hide-scrollbar">
-              <h2 className="text-xl font-bold font-heading text-ink mb-2">{step.title}</h2>
-              {step.type !== 'review' && step.type !== 'offers' && (
-                <p className="text-sm text-muted-foreground mb-6">{step.description}</p>
-              )}
-              {renderStepContent()}
-            </div>
+            {renderStepContent()}
 
-            <div className="p-6 border-t border-border bg-background/50 flex flex-col gap-3">
-              {errorMessage && (
-                <p className="text-xs text-destructive bg-destructive/5 border border-destructive/20 rounded-xl px-4 py-2 text-center">
-                  {errorMessage}
-                </p>
-              )}
-              <div className="flex items-center justify-between gap-4">
-              <Button variant="outline" className="rounded-xl px-6" onClick={handlePrev} disabled={currentStep === 0 || isGenerating}>
-                <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-              </Button>
-
-              <span className={`text-xs text-muted-foreground transition-opacity duration-500 ${draftSaved ? 'opacity-100' : 'opacity-0'}`}>
-                Rascunho salvo
-              </span>
-
-              <Button className="rounded-xl px-8 bg-primary text-primary-foreground" onClick={handleNext} disabled={isGenerating}>
-                {currentStep === mockOnboardingSteps.length - 1 ? (
-                  isGenerating ? 'Gerando preview...' : 'Gerar preview final'
-                ) : (
-                  <>Continuar <ArrowRight className="w-4 h-4 ml-2" /></>
+            {/* Erros e navegação — barra fixa no mobile, inline no desktop */}
+            <div className="mt-8 pb-32 lg:pb-8">
+              <div className="fixed bottom-0 inset-x-0 z-40 bg-surface border-t border-border p-3 space-y-2 lg:static lg:bg-transparent lg:border-0 lg:p-0 lg:space-y-3">
+                {errorMessage && (
+                  <p className="text-sm text-destructive bg-destructive/5 border border-destructive/20 rounded-xl px-4 py-3">
+                    {errorMessage}
+                  </p>
                 )}
-              </Button>
+                {stepBlockReason && (
+                  <p className="text-xs text-muted-foreground text-center">{stepBlockReason}</p>
+                )}
+                <div className="flex items-center gap-2 sm:gap-3 max-w-xl mx-auto lg:mx-0">
+                  {currentStep > 0 && (
+                    <Button
+                      variant="outline"
+                      className="rounded-xl h-12 px-4 sm:px-5 shrink-0"
+                      onClick={handlePrev}
+                      disabled={isGenerating}
+                      aria-label="Voltar"
+                    >
+                      <ArrowLeft className="w-4 h-4" />
+                      <span className="hidden sm:inline sm:ml-2">Voltar</span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="rounded-xl h-12 px-4 shrink-0 lg:hidden"
+                    onClick={() => setShowMobilePreview(true)}
+                    disabled={isGenerating}
+                    aria-label="Ver prévia da página"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    className="flex-1 rounded-xl h-12 bg-primary text-primary-foreground text-base font-bold"
+                    onClick={handleNext}
+                    disabled={isGenerating || Boolean(stepBlockReason)}
+                  >
+                    {isLastStep ? (
+                      isGenerating ? (
+                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> {generatingLabel}</>
+                      ) : (
+                        finalButtonLabel
+                      )
+                    ) : (
+                      <>Continuar <ArrowRight className="w-4 h-4 ml-2" /></>
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-6 overflow-y-auto hide-scrollbar">
-            <div className="flex flex-col items-center bg-surface border border-border rounded-2xl p-6">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-ink mb-4">Preview em tempo real</h3>
-              <div className="transform scale-[0.8] origin-top h-[480px]">
-                <SmartBioPreviewMock data={{
-                  tenantName: answers.brandName || 'Sua marca',
-                  title: answers.brandName || 'Seu nome aqui',
-                  bio: answers.shortBio || null,
-                  theme: answers.theme,
-                  avatarUrl: avatarPreview || null,
-                  socialLinks: {},
-                  offers: answers.offerTitle
-                    ? [{ title: answers.offerTitle, description: answers.offerDescription } as unknown as PublicSmartBioData['offers'][0]]
-                    : [],
-                  quizQuestions: [
-                    { q: answers.diagnosticQuestion, opts: answers.diagnosticOptions },
-                    { q: answers.diagnosticQuestion2, opts: answers.diagnosticOptions2 },
-                    { q: answers.diagnosticQuestion3, opts: answers.diagnosticOptions3 },
-                    { q: answers.diagnosticQuestion4, opts: answers.diagnosticOptions4 },
-                    { q: answers.diagnosticQuestion5, opts: answers.diagnosticOptions5 },
-                  ]
-                    .filter(({ q }) => q?.trim())
-                    .map(({ q, opts }) => ({ question: q, options: opts.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0])),
-                }} />
-              </div>
+          {/* Preview — desktop */}
+          <div className="hidden lg:flex w-[340px] shrink-0 flex-col items-center sticky top-32">
+            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
+              Sua página vai ficando pronta
+            </p>
+            <div className="transform scale-[0.85] origin-top">
+              <SmartBioPreviewMock data={previewData} />
             </div>
           </div>
         </div>
       </div>
-    </DashboardLayout>
+
+      {/* Overlay de preview — mobile */}
+      {showMobilePreview && (
+        <div className="lg:hidden fixed inset-0 z-50 bg-black/70 flex flex-col items-center justify-center p-4">
+          <button
+            type="button"
+            onClick={() => setShowMobilePreview(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/15 text-white flex items-center justify-center"
+            aria-label="Fechar prévia"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <p className="text-white/80 text-xs font-bold uppercase tracking-wider mb-4">
+            Assim está a sua página
+          </p>
+          <div className="transform scale-[0.85] origin-top max-h-[80vh]">
+            <SmartBioPreviewMock data={previewData} />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

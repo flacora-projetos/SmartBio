@@ -480,7 +480,9 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
     if (ruleUpdateError) throw ruleUpdateError;
   }
 
-  const newSlug = slugFromBrandName(brandName);
+  // Página publicada mantém o slug: o link já pode estar na bio do Instagram
+  // do cliente — mudar o nome da marca não pode quebrar a URL pública.
+  const newSlug = smartbio.status === 'published' ? smartbio.slug : slugFromBrandName(brandName);
 
   // Monta social_links apenas com campos preenchidos
   const social_links: Record<string, string> = {};
@@ -490,6 +492,11 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
   if (answers.youtube) social_links.youtube = answers.youtube;
   if (answers.site) social_links.site = answers.site;
 
+  // Uma página já publicada continua publicada ao ser editada — rebaixar o
+  // status derrubaria a URL pública no ar (as ofertas/quiz já são atualizadas
+  // em vigor de qualquer forma; quem edita é o próprio dono que aprova).
+  const nextStatus = smartbio.status === 'published' ? 'published' : 'preview_pending_approval';
+
   const { error: smartbioError } = await supabase
     .from('smartbios')
     .update({
@@ -497,7 +504,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
       slug: newSlug,
       short_bio: shortBio,
       social_links,
-      status: 'preview_pending_approval',
+      status: nextStatus,
       public_config: {
         generationMode: 'initial_guided_flow',
         requiresReview: true,

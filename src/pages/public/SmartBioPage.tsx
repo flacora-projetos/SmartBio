@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Sparkles, ArrowRight, Loader2, Phone, Globe, Youtube,
   Music, ExternalLink, Calendar, ShoppingBag, Mic, BookOpen,
@@ -109,6 +109,10 @@ function OfferCard({ offer, onCtaClick }: { offer: PublicOffer; onCtaClick: (off
 
 export function SmartBioPage() {
   const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  // Modo preview (iframe do dashboard): mostra a página real antes da
+  // publicação, sem registrar analytics, leads ou disparar pixels.
+  const isPreview = searchParams.get('preview') === '1';
   const [pageState, setPageState]   = useState<PageState>('loading');
   const [quizState, setQuizState]   = useState<QuizState>('idle');
   const [pageData, setPageData]     = useState<PublicPageData | null>(null);
@@ -117,12 +121,13 @@ export function SmartBioPage() {
   const [matchedRule, setMatchedRule]   = useState<PublicRule | null>(null);
   const [quizAnswers, setQuizAnswers]   = useState<string[]>([]);
 
-  const { fireEvent } = useTrackingTags(pageData?.smartbio.tracking_config ?? {});
+  // Em preview, pixels de tracking não são carregados
+  const { fireEvent } = useTrackingTags(isPreview ? {} : (pageData?.smartbio.tracking_config ?? {}));
 
   useEffect(() => {
     if (!slug) { setPageState('not_found'); return; }
 
-    fetchPublicSmartBio(slug).then(data => {
+    fetchPublicSmartBio(slug, { preview: isPreview }).then(data => {
       if (!data) { setPageState('not_found'); return; }
       if ('paused' in data) {
         setPausedTitle(data.title);
@@ -131,12 +136,12 @@ export function SmartBioPage() {
       }
       setPageData(data);
       setPageState('ready');
-      trackEvent(data.smartbio.tenant_id, data.smartbio.id, 'page_view', { slug });
+      if (!isPreview) trackEvent(data.smartbio.tenant_id, data.smartbio.id, 'page_view', { slug });
     });
-  }, [slug]);
+  }, [slug, isPreview]);
 
   useEffect(() => {
-    if (pageState === 'ready' && pageData) {
+    if (pageState === 'ready' && pageData && !isPreview) {
       fireEvent('page_view', { content_name: pageData.smartbio.title });
     }
   }, [pageState, pageData]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -144,8 +149,10 @@ export function SmartBioPage() {
   const handleStartQuiz = () => {
     if (!pageData) return;
     setQuizState('in_progress');
-    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
-    fireEvent('quiz_start');
+    if (!isPreview) {
+      trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
+      fireEvent('quiz_start');
+    }
   };
 
   const handleQuizComplete = (answers: string[]) => {
@@ -161,12 +168,14 @@ export function SmartBioPage() {
     setMatchedOffer(offer ?? null);
     setQuizState('completed');
 
-    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_complete', {
-      answers,
-      matched_rule_id: rule?.id ?? null,
-      matched_offer_id: offer?.id ?? null,
-    });
-    fireEvent('quiz_complete', { num_items: pageData.questions.length });
+    if (!isPreview) {
+      trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_complete', {
+        answers,
+        matched_rule_id: rule?.id ?? null,
+        matched_offer_id: offer?.id ?? null,
+      });
+      fireEvent('quiz_complete', { num_items: pageData.questions.length });
+    }
   };
 
   const handleResetQuiz = () => {
@@ -180,9 +189,11 @@ export function SmartBioPage() {
   const handleOfferCtaClick = (offer: PublicOffer) => {
     if (!pageData) return;
     const destination = buildCtaUrl(offer.recommended_cta, offer.cta_destination, offer.cta_url);
-    insertLead(pageData.smartbio.tenant_id, pageData.smartbio.id, offer.id, quizAnswers, offer.recommended_cta ?? 'url');
-    trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'cta_click', { offer_id: offer.id, destination });
-    fireEvent('cta_click', { content_name: offer.title });
+    if (!isPreview) {
+      insertLead(pageData.smartbio.tenant_id, pageData.smartbio.id, offer.id, quizAnswers, offer.recommended_cta ?? 'url');
+      trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'cta_click', { offer_id: offer.id, destination });
+      fireEvent('cta_click', { content_name: offer.title });
+    }
     if (destination !== '#') window.open(destination, '_blank', 'noopener,noreferrer');
   };
 
@@ -354,6 +365,11 @@ export function SmartBioPage() {
   // ── Page layout ──────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background">
+      {isPreview && (
+        <div className="fixed top-0 inset-x-0 z-50 bg-warning text-white text-center text-[11px] font-bold uppercase tracking-widest py-1.5">
+          Modo preview — esta página ainda não está publicada
+        </div>
+      )}
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="w-[700px] h-[700px] bg-primary/4 rounded-full blur-3xl absolute -top-[350px] left-1/2 -translate-x-1/2" />

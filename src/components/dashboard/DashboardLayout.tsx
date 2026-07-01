@@ -31,11 +31,21 @@ type SmartBioPublishStatus =
   | 'archived'
   | null;
 
-const smartbioItems = [
-  { label: 'Onboarding Guiado', path: '/app/onboarding', icon: Sparkles },
+// Rótulos mudam conforme o estado: durante a criação o usuário está "criando",
+// depois da publicação ele está "editando" — a navegação deixa isso explícito.
+const smartbioItemsCreating = [
+  { label: 'Criar minha página', path: '/app/onboarding', icon: Sparkles },
   { label: 'Ofertas', path: '/app/offers', icon: Package },
   { label: 'Quiz e recomendação', path: '/app/quiz', icon: HelpCircle },
-  { label: 'Preview e publicação', path: '/app/preview', icon: Eye },
+  { label: 'Preview e aprovação', path: '/app/preview', icon: Eye },
+  { label: 'Agenda', path: '/app/agenda', icon: Calendar },
+];
+
+const smartbioItemsPublished = [
+  { label: 'Editar minha página', path: '/app/onboarding', icon: Pencil },
+  { label: 'Ofertas', path: '/app/offers', icon: Package },
+  { label: 'Quiz e recomendação', path: '/app/quiz', icon: HelpCircle },
+  { label: 'Ver minha página', path: '/app/preview', icon: Eye },
   { label: 'Agenda', path: '/app/agenda', icon: Calendar },
 ];
 
@@ -167,18 +177,9 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
         />
 
         {/* Seção SmartBio */}
-        <SectionLabel>
-          {isPublished ? (
-            <span className="flex items-center gap-1">
-              <Pencil className="w-2.5 h-2.5 inline" />
-              Editar SmartBio
-            </span>
-          ) : (
-            'Criar minha SmartBio'
-          )}
-        </SectionLabel>
+        <SectionLabel>Sua página</SectionLabel>
 
-        {smartbioItems.map((item) => {
+        {(isPublished ? smartbioItemsPublished : smartbioItemsCreating).map((item) => {
           const isOnboarding = item.path === '/app/onboarding';
           if (isDraft && !isOnboarding) {
             return (
@@ -186,7 +187,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
                 key={item.path}
                 icon={item.icon}
                 label={item.label}
-                title="Conclua o onboarding guiado primeiro"
+                title="Crie sua página primeiro — é rápido"
               />
             );
           }
