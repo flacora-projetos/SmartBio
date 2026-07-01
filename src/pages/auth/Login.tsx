@@ -1,4 +1,5 @@
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
 import { dashboardData } from '@/data/mock';
@@ -28,7 +29,11 @@ export function Login() {
     setIsLoading(false);
 
     if (error) {
-      setError('Não foi possível entrar. Verifique seu e-mail e senha.');
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        setError('Seu e-mail ainda não foi confirmado. Verifique sua caixa de entrada (ou spam) e clique no link de confirmação.');
+      } else {
+        setError('Não foi possível entrar. Verifique seu e-mail e senha.');
+      }
       return;
     }
 
@@ -56,12 +61,9 @@ export function Login() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-ink">{dashboardData.auth.login.passwordLabel}</label>
-          <input 
-            type="password" 
+          <PasswordInput
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full px-4 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            placeholder="••••••••"
+            onChange={setPassword}
             autoComplete="current-password"
             required
           />

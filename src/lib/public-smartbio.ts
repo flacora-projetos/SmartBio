@@ -8,6 +8,7 @@ export type PublicSmartBio = {
   slug: string;
   public_config: Record<string, unknown>;
   theme_config: Record<string, unknown>;
+  tracking_config: Record<string, unknown>;
 };
 
 export type PublicOffer = {
@@ -52,7 +53,7 @@ export type PausedPageData = {
 export async function fetchPublicSmartBio(slug: string): Promise<PublicPageData | PausedPageData | null> {
   const { data: smartbio, error } = await supabase
     .from('smartbios')
-    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config')
+    .select('id, tenant_id, title, short_bio, slug, public_config, theme_config, tracking_config')
     .eq('slug', slug)
     .eq('status', 'published')
     .maybeSingle();

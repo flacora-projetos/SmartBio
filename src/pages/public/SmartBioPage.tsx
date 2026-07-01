@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { PublicSmartBioHeader } from '@/components/public/PublicSmartBioHeader';
 import { QuizFlowMock } from '@/components/public/QuizFlowMock';
 import { RecommendationResult } from '@/components/public/RecommendationResult';
+import { useTrackingTags } from '@/hooks/useTrackingTags';
 import {
   fetchPublicSmartBio,
   findMatchingRule,
@@ -27,6 +28,8 @@ export function SmartBioPage() {
   const [matchedRule, setMatchedRule] = useState<PublicRule | null>(null);
   const [quizAnswers, setQuizAnswers] = useState<string[]>([]);
 
+  const { fireEvent } = useTrackingTags(pageData?.smartbio.tracking_config ?? {});
+
   useEffect(() => {
     if (!slug) { setPageState('not_found'); return; }
 
@@ -43,10 +46,18 @@ export function SmartBioPage() {
     });
   }, [slug]);
 
+  // Dispara page_view nas plataformas externas após os scripts carregarem
+  useEffect(() => {
+    if (pageState === 'start' && pageData) {
+      fireEvent('page_view', { content_name: pageData.smartbio.title });
+    }
+  }, [pageState, pageData]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleStartQuiz = () => {
     if (!pageData) return;
     setPageState('quiz');
     trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
+    fireEvent('quiz_start');
   };
 
   const handleQuizComplete = (answers: string[]) => {
@@ -67,6 +78,7 @@ export function SmartBioPage() {
       matched_rule_id: rule?.id ?? null,
       matched_offer_id: offer?.id ?? null,
     });
+    fireEvent('quiz_complete', { num_items: pageData.questions.length });
   };
 
   const handleCtaClick = () => {
@@ -85,6 +97,7 @@ export function SmartBioPage() {
       offer_id: matchedOffer.id,
       destination,
     });
+    fireEvent('cta_click', { content_name: matchedOffer.title });
 
     if (destination !== '#') window.open(destination, '_blank', 'noopener,noreferrer');
   };

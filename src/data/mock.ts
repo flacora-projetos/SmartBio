@@ -79,7 +79,7 @@ export const landingData = {
       description: "Para profissionais e marcas com uma operação.",
       priceLabel: "97",
       currency: "R$",
-      features: ["1 SmartBio publicada", "Até 5 ofertas", "Quiz de diagnóstico", "Recomendação personalizada", "Preview antes da publicação", "Leads com histórico de 60 dias", "Analytics de funil"]
+      features: ["1 SmartBio publicada", "Até 5 ofertas", "Quiz de diagnóstico", "Recomendação personalizada", "Preview antes da publicação", "Leads com histórico de 60 dias", "Analytics de funil", "Meta Pixel, GA4 e GTM integrados"]
     },
     {
       id: "plan_agencia",
@@ -89,7 +89,7 @@ export const landingData = {
       description: "Para agências e profissionais que gerenciam múltiplos clientes.",
       priceLabel: "247",
       currency: "R$",
-      features: ["Até 20 SmartBios publicadas", "Ofertas ilimitadas", "Quiz sem limite de perguntas", "Histórico de leads sem limite", "Analytics completo com exportação", "Domínio próprio (em breve)", "Suporte prioritário"],
+      features: ["Até 20 SmartBios publicadas", "Ofertas ilimitadas", "Quiz sem limite de perguntas", "Histórico de leads sem limite", "Analytics completo com exportação", "Meta Pixel, GA4 e GTM por SmartBio", "Domínio próprio (em breve)", "Suporte prioritário"],
       highlighted: true
     }
   ],
@@ -123,6 +123,10 @@ export const landingData = {
       {
         question: "Onde coloco o link publicado?",
         answer: "Na bio do Instagram, TikTok, YouTube, LinkedIn — ou em qualquer campanha de tráfego pago."
+      },
+      {
+        question: "A SmartBio funciona com Meta Pixel e GA4?",
+        answer: "Sim. Você cola o ID do Meta Pixel, GA4 ou GTM nas configurações — sem código. A SmartBio injeta os scripts automaticamente e dispara os eventos certos em cada etapa: visualização, início do quiz, lead capturado e clique no CTA."
       },
       {
         question: "Posso usar WhatsApp, agenda, formulário ou checkout?",

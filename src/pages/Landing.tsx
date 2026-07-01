@@ -6,6 +6,7 @@ import { ConversionBlocks } from '@/components/landing/ConversionBlocks';
 import { SmartBioCreationDemo } from '@/components/landing/SmartBioCreationDemo';
 import { AiOnboardingSection } from '@/components/landing/AiOnboardingSection';
 import { RecommendationToConversionSection } from '@/components/landing/RecommendationToConversionSection';
+import { TrackingIntegrationSection } from '@/components/landing/TrackingIntegrationSection';
 import { PricingCards } from '@/components/landing/PricingCards';
 import { FAQ } from '@/components/landing/FAQ';
 import { FinalCTA } from '@/components/landing/FinalCTA';
@@ -23,6 +24,7 @@ export default function Landing() {
         <SmartBioCreationDemo />
         <AiOnboardingSection />
         <RecommendationToConversionSection />
+        <TrackingIntegrationSection />
         <PricingCards />
         <FAQ />
         <FinalCTA />

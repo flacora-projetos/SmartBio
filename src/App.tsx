@@ -10,6 +10,7 @@ import { Quiz } from '@/pages/dashboard/Quiz';
 import { Preview } from '@/pages/dashboard/Preview';
 import { Leads } from '@/pages/dashboard/Leads';
 import { Analytics } from '@/pages/dashboard/Analytics';
+import { Settings } from '@/pages/dashboard/Settings';
 import { SmartBioPage } from '@/pages/public/SmartBioPage';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/app/preview" element={<ProtectedRoute><Preview /></ProtectedRoute>} />
           <Route path="/app/leads" element={<ProtectedRoute><Leads /></ProtectedRoute>} />
           <Route path="/app/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+          <Route path="/app/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           
           {/* Public Slug */}
           <Route path="/s/:slug" element={<SmartBioPage />} />

@@ -1,4 +1,5 @@
 import { AuthLayout } from '@/components/auth/AuthLayout';
+import { PasswordInput } from '@/components/auth/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { dashboardData } from '@/data/mock';
@@ -73,12 +74,9 @@ export function Signup() {
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-ink">{dashboardData.auth.signup.passwordLabel}</label>
-          <input 
-            type="password" 
+          <PasswordInput
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className="w-full px-4 py-2 bg-background border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            placeholder="••••••••"
+            onChange={setPassword}
             autoComplete="new-password"
             minLength={6}
             required
