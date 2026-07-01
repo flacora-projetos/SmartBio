@@ -166,6 +166,43 @@ function createGeneratedBio(tenant: AppTenant, answers: OnboardingDraftAnswers) 
   return `${tenant.name} ajuda ${audience} em ${niche} a ${objective.toLowerCase()} com uma experiencia guiada e recomendacao clara.`;
 }
 
+type AiEnrichment = {
+  shortBio?: string;
+  diagnosticTitle?: string;
+  diagnosticQuestion?: string;
+  diagnosticOptions?: string[];
+  recommendationReason?: string;
+};
+
+async function enrichWithAI(answers: OnboardingDraftAnswers): Promise<AiEnrichment> {
+  try {
+    const { data, error } = await supabase.functions.invoke('generate-smartbio', {
+      body: {
+        brandName: answers.brandName,
+        niche: answers.niche,
+        objective: answers.objective,
+        audience: answers.audience,
+        pain: answers.pain,
+        offerTitle: answers.offerTitle,
+        offerDescription: answers.offerDescription,
+        conversionDestination: answers.conversionDestination,
+      },
+    });
+
+    if (error || !data || data.error) return {};
+
+    return {
+      shortBio: typeof data.shortBio === 'string' ? data.shortBio : undefined,
+      diagnosticTitle: typeof data.diagnosticTitle === 'string' ? data.diagnosticTitle : undefined,
+      diagnosticQuestion: typeof data.diagnosticQuestion === 'string' ? data.diagnosticQuestion : undefined,
+      diagnosticOptions: Array.isArray(data.diagnosticOptions) && data.diagnosticOptions.length > 0 ? data.diagnosticOptions : undefined,
+      recommendationReason: typeof data.recommendationReason === 'string' ? data.recommendationReason : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
 async function saveOnboardingAnswers(tenantId: string, smartbioId: string, answers: OnboardingDraftAnswers) {
   const rows = [
     { step_id: 'step_identity', answer: { brandName: answers.brandName, shortBio: answers.shortBio, niche: answers.niche } },
@@ -190,18 +227,24 @@ async function saveOnboardingAnswers(tenantId: string, smartbioId: string, answe
 
 export async function generateInitialPreview(tenant: AppTenant, answers: OnboardingDraftAnswers) {
   const smartbio = await getOrCreateWorkspaceSmartBio(tenant);
+
+  // Enriquecimento via IA — falha silenciosamente, nunca bloqueia o fluxo
+  const ai = await enrichWithAI(answers);
+
   const brandName = clean(answers.brandName, tenant.name);
-  const shortBio = clean(answers.shortBio, createGeneratedBio(tenant, answers));
+  const shortBio = ai.shortBio || clean(answers.shortBio, createGeneratedBio(tenant, answers));
   const offerTitle = clean(answers.offerTitle, 'Oferta principal');
   const offerDescription = clean(answers.offerDescription, 'Oferta inicial gerada a partir do onboarding. Deve ser revisada antes de publicar.');
-  const diagnosticQuestion = clean(answers.diagnosticQuestion, 'Qual resultado voce busca agora?');
-  const diagnosticOptions = answers.diagnosticOptions
+  const diagnosticQuestion = ai.diagnosticQuestion || clean(answers.diagnosticQuestion, 'Qual resultado voce busca agora?');
+  const rawOptions = ai.diagnosticOptions ?? answers.diagnosticOptions;
+  const diagnosticOptions = rawOptions
     .map((option) => option.trim())
     .filter(Boolean)
     .slice(0, 5);
   const options = diagnosticOptions.length > 0
     ? diagnosticOptions
     : ['Entender melhor a solucao', 'Falar com a equipe', 'Comparar opcoes antes de decidir'];
+  const aiDiagnosticTitle = ai.diagnosticTitle || answers.diagnosticTitle;
 
   await saveOnboardingAnswers(tenant.id, smartbio.id, answers);
 
@@ -286,7 +329,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
       .update({
         question: diagnosticQuestion,
         options,
-        intention: clean(answers.diagnosticTitle, 'Identificar o proximo passo de conversao'),
+        intention: clean(aiDiagnosticTitle, 'Identificar o proximo passo de conversao'),
         status: 'active',
       })
       .eq('tenant_id', tenant.id)
@@ -314,7 +357,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         description: 'Regra inicial gerada automaticamente para validar o funil.',
         condition: { answer_contains: options[0] },
         recommended_offer_id: offerId,
-        recommendation_reason: `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
+        recommendation_reason: ai.recommendationReason || `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
         final_cta: clean(answers.buttonText, 'Falar com a equipe'),
         status: 'active',
       });
@@ -326,7 +369,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
       .update({
         condition: { answer_contains: options[0] },
         recommended_offer_id: offerId,
-        recommendation_reason: `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
+        recommendation_reason: ai.recommendationReason || `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
         final_cta: clean(answers.buttonText, 'Falar com a equipe'),
         status: 'active',
       })
@@ -345,7 +388,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
       public_config: {
         generationMode: 'initial_guided_flow',
         requiresReview: true,
-        diagnosticTitle: answers.diagnosticTitle,
+        diagnosticTitle: aiDiagnosticTitle,
         conversionDestination: answers.conversionDestination,
         buttonText: answers.buttonText,
         avatarUrl: answers.avatarUrl || null,
