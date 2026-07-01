@@ -125,7 +125,7 @@ export function OfferFormPanel({
   };
 
   return (
-    <div className="bg-surface border-l border-border h-full flex flex-col w-full max-w-md ml-auto shadow-xl">
+    <div className="bg-surface border-l border-border h-full flex flex-col w-full max-w-md ml-auto shadow-xl relative z-10">
       <div className="flex items-center justify-between p-4 border-b border-border bg-background/50">
         <h3 className="font-bold text-ink font-heading">{isNew ? 'Nova Oferta' : 'Editar Oferta'}</h3>
         <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full text-muted-foreground hover:text-ink">

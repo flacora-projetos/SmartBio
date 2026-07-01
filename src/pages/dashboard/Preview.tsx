@@ -38,7 +38,7 @@ function PhoneIframe({ slug }: { slug: string }) {
           src={src}
           className="w-full h-full border-0"
           title="Preview da SmartBio ao vivo"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
         />
         <div className="h-1 w-20 bg-border/60 absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full z-20 pointer-events-none" />
       </div>
@@ -162,7 +162,7 @@ export function Preview() {
 
     loadWorkspace();
     return () => { isMounted = false; };
-  }, [tenant]);
+  }, [tenant?.id]);
 
   const handleApprove = async () => {
     if (!workspace?.readiness.canApprove || !tenant) return;
