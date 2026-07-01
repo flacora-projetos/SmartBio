@@ -38,6 +38,12 @@ CREATE INDEX IF NOT EXISTS smartbio_assets_status_idx    ON public.smartbio_asse
 -- RLS
 ALTER TABLE public.smartbio_assets ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "assets_select_members" ON public.smartbio_assets;
+DROP POLICY IF EXISTS "assets_insert_members" ON public.smartbio_assets;
+DROP POLICY IF EXISTS "assets_update_members" ON public.smartbio_assets;
+DROP POLICY IF EXISTS "assets_delete_members" ON public.smartbio_assets;
+DROP POLICY IF EXISTS "assets_public_read"    ON public.smartbio_assets;
+
 CREATE POLICY "assets_select_members" ON public.smartbio_assets
   FOR SELECT USING (public.is_tenant_member(tenant_id));
 
