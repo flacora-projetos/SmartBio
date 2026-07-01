@@ -86,6 +86,84 @@ export function Onboarding() {
   const { tenant, user } = useAuth();
   const step = mockOnboardingSteps[currentStep];
 
+  // Inicializa avatar do usuário (metadados Supabase Auth)
+  useEffect(() => {
+    const metaAvatar = user?.user_metadata?.avatar_url as string | undefined;
+    if (metaAvatar && !avatarPreview) {
+      setAvatarPreview(metaAvatar);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
+
+  // Carrega respostas salvas do Supabase quando não há rascunho local
+  useEffect(() => {
+    if (!tenant || !user) return;
+    if (localStorage.getItem(DRAFT_KEY)) return;
+
+    async function loadFromSupabase() {
+      const { data, error } = await supabase
+        .from('onboarding_answers')
+        .select('step_key, answer_json')
+        .eq('tenant_id', tenant!.id);
+
+      if (error || !data || data.length === 0) return;
+
+      const merged: Partial<OnboardingDraftAnswers> = {};
+      let hasQ2 = false;
+
+      for (const row of data) {
+        const ans = row.answer_json as Record<string, unknown>;
+        switch (row.step_key) {
+          case 'step_identity':
+            if (ans.brandName) merged.brandName = String(ans.brandName);
+            if (ans.shortBio) merged.shortBio = String(ans.shortBio);
+            if (ans.niche) merged.niche = String(ans.niche);
+            if (ans.avatarUrl) {
+              merged.avatarUrl = String(ans.avatarUrl);
+              setAvatarPreview(String(ans.avatarUrl));
+            }
+            break;
+          case 'step_objective':
+            if (ans.objective) merged.objective = String(ans.objective);
+            if (ans.audience) merged.audience = String(ans.audience);
+            if (ans.pain) merged.pain = String(ans.pain);
+            break;
+          case 'step_offers':
+            if (ans.offerTitle) merged.offerTitle = String(ans.offerTitle);
+            if (ans.offerDescription) merged.offerDescription = String(ans.offerDescription);
+            break;
+          case 'step_diagnostic':
+            if (ans.title) merged.diagnosticTitle = String(ans.title);
+            if (ans.question1) merged.diagnosticQuestion = String(ans.question1);
+            if (Array.isArray(ans.options1)) merged.diagnosticOptions = ans.options1.map(String);
+            if (ans.question2) {
+              merged.diagnosticQuestion2 = String(ans.question2);
+              hasQ2 = true;
+            }
+            if (Array.isArray(ans.options2)) merged.diagnosticOptions2 = ans.options2.map(String);
+            break;
+          case 'step_conversion':
+            if (ans.destination) merged.conversionDestination = String(ans.destination);
+            if (ans.buttonText) merged.buttonText = String(ans.buttonText);
+            if (ans.message) merged.conversionMessage = String(ans.message);
+            break;
+          case 'step_style':
+            if (ans.theme) merged.theme = String(ans.theme) as 'light' | 'dark';
+            if (ans.accentColor) merged.accentColor = String(ans.accentColor);
+            break;
+        }
+      }
+
+      if (Object.keys(merged).length > 0) {
+        setAnswers(prev => ({ ...prev, ...merged }));
+        if (hasQ2) setShowSecondQuestion(true);
+      }
+    }
+
+    loadFromSupabase();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant?.id, user?.id]);
+
   // Auto-save rascunho no localStorage a cada mudança
   useEffect(() => {
     if (draftTimerRef.current) clearTimeout(draftTimerRef.current);

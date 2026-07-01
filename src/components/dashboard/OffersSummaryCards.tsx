@@ -38,7 +38,7 @@ export function OffersSummaryCards({ offers }: OffersSummaryCardsProps) {
       </div>
 
       <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center gap-3 text-secondary-foreground mb-2">
+        <div className="flex items-center gap-3 text-warning mb-2">
           <Zap className="w-5 h-5" />
           <h3 className="font-bold text-sm">Usadas na Recomendação</h3>
         </div>

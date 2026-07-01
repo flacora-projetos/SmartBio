@@ -131,7 +131,7 @@ export function RecommendationRulesPanel({
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar min-h-[200px] max-h-[420px]">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar min-h-[200px]">
         {/* Rule list */}
         {rules.length === 0 && editingId === null && (
           <div className="py-8 text-center text-muted-foreground text-sm">
@@ -143,7 +143,7 @@ export function RecommendationRulesPanel({
           <div key={rule.id} className="p-3 rounded-xl border border-border bg-background flex flex-col gap-2 group relative">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <span className="text-xs font-bold text-ink line-clamp-1">{rule.name}</span>
+                <span className="text-xs font-bold text-ink line-clamp-2 break-words">{rule.name}</span>
                 <div className={`mt-0.5 inline-flex px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
                   rule.status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'
                 }`}>
@@ -176,14 +176,14 @@ export function RecommendationRulesPanel({
                 {(rule.condition as { answer_contains?: string }).answer_contains && (
                   <div className="flex items-start gap-1.5 text-muted-foreground">
                     <span className="font-bold text-primary mt-[1px] shrink-0">SE</span>
-                    <span className="font-mono text-[10px] bg-background px-1 py-0.5 rounded border border-border flex-1 truncate">
+                    <span className="font-mono text-[10px] bg-background px-1 py-0.5 rounded border border-border flex-1 break-words">
                       contém "{(rule.condition as { answer_contains?: string }).answer_contains}"
                     </span>
                   </div>
                 )}
                 <div className="flex items-center gap-1 text-muted-foreground">
                   <ChevronRight className="w-3 h-3 text-success shrink-0" />
-                  <span className="font-medium text-ink truncate text-[11px]">
+                  <span className="font-medium text-ink text-[11px] break-words line-clamp-2">
                     {getOfferName(rule.recommended_offer_id)}
                   </span>
                 </div>

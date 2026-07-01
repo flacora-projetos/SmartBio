@@ -109,7 +109,7 @@ export function Quiz() {
                 </div>
 
                 {/* Center: Question editor */}
-                <div className="lg:col-span-5 h-[500px] lg:h-auto">
+                <div className="lg:col-span-4 h-[500px] lg:h-auto">
                   {tenant && (
                     <QuestionEditor
                       question={editorQuestion}
@@ -122,7 +122,7 @@ export function Quiz() {
                 </div>
 
                 {/* Right: Rules & Preview */}
-                <div className="lg:col-span-3 flex flex-col gap-6">
+                <div className="lg:col-span-4 flex flex-col gap-6">
                   {tenant && (
                     <RecommendationRulesPanel
                       rules={rules}

@@ -4,7 +4,6 @@ import { SmartBioPreviewMock } from '@/components/dashboard/SmartBioPreviewMock'
 import { PublishChecklist } from '@/components/dashboard/PublishChecklist';
 import { PublishApprovalPanel } from '@/components/dashboard/PublishApprovalPanel';
 import { PreviewSummary } from '@/components/dashboard/PreviewSummary';
-import { mockRecommendationPreview } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -148,8 +147,7 @@ export function Preview() {
         <PreviewSummary
           questionsCount={workspace?.counts.questions ?? 0}
           rulesCount={workspace?.counts.rules ?? 0}
-          mainOffer={mockRecommendationPreview.offerName}
-          finalCta={mockRecommendationPreview.buttonText}
+          offersCount={workspace?.counts.offers ?? 0}
         />
 
         <div className="mt-6 sm:hidden">

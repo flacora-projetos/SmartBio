@@ -31,7 +31,7 @@ type SmartBioPublishStatus =
   | null;
 
 const smartbioItems = [
-  { label: 'Identidade', path: '/app/onboarding', icon: Sparkles },
+  { label: 'Onboarding Guiado', path: '/app/onboarding', icon: Sparkles },
   { label: 'Ofertas', path: '/app/offers', icon: Package },
   { label: 'Quiz e recomendação', path: '/app/quiz', icon: HelpCircle },
   { label: 'Preview e publicação', path: '/app/preview', icon: Eye },
