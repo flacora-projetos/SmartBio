@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { OnboardingStepper } from '@/components/onboarding/OnboardingStepper';
-import { AiSuggestionsPanel } from '@/components/onboarding/AiSuggestionsPanel';
 import { SmartBioPreviewMock } from '@/components/dashboard/SmartBioPreviewMock';
-import { mockAiSuggestions, mockOnboardingSteps } from '@/data/mock';
+import { mockOnboardingSteps } from '@/data/mock';
+import type { PublicSmartBioData } from '@/types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -348,16 +348,23 @@ export function Onboarding() {
           </div>
 
           <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-6 overflow-y-auto hide-scrollbar">
-            {currentStep < 5 && (
-              <div className="flex-1 min-h-[300px]">
-                <AiSuggestionsPanel suggestions={mockAiSuggestions} />
-              </div>
-            )}
-
             <div className="flex flex-col items-center bg-surface border border-border rounded-2xl p-6">
               <h3 className="text-sm font-bold uppercase tracking-wider text-ink mb-4">Preview em tempo real</h3>
               <div className="transform scale-[0.8] origin-top h-[480px]">
-                <SmartBioPreviewMock />
+                <SmartBioPreviewMock data={{
+                  tenantName: answers.brandName || 'Sua marca',
+                  title: answers.brandName || 'Seu nome aqui',
+                  bio: answers.shortBio || null,
+                  theme: answers.theme,
+                  avatarUrl: avatarPreview || null,
+                  socialLinks: {},
+                  offers: answers.offerTitle
+                    ? [{ title: answers.offerTitle, description: answers.offerDescription } as unknown as PublicSmartBioData['offers'][0]]
+                    : [],
+                  quizQuestions: answers.diagnosticQuestion
+                    ? [{ question: answers.diagnosticQuestion, options: answers.diagnosticOptions.filter(Boolean) } as unknown as PublicSmartBioData['quizQuestions'][0]]
+                    : [],
+                }} />
               </div>
             </div>
           </div>
