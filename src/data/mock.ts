@@ -2,7 +2,7 @@ import { Plan, User, Tenant, SmartBio, Offer, AiSuggestion, QuizQuestion, Recomm
 
 export const landingData = {
   hero: {
-    title: "Crie uma bio inteligente com IA, aprove o preview e publique em minutos.",
+    title: "Crie uma bio inteligente, aprove o preview e publique em minutos.",
     subtitle: "A SmartBio guia seu onboarding, organiza suas ofertas, gera uma página pública de conversão e entrega um link pronto para colocar na bio das suas redes.",
     primaryCta: "Criar minha SmartBio",
     secondaryCta: "Ver como funciona",
@@ -17,7 +17,7 @@ export const landingData = {
     },
     after: {
       title: "Com SmartBio",
-      items: ["Onboarding guiado por IA", "Página gerada automaticamente", "Visitante responde perguntas", "Recomendação clara", "CTA certo no final"]
+      items: ["Onboarding guiado", "Página gerada automaticamente", "Visitante responde perguntas", "Recomendação clara", "CTA certo no final"]
     }
   },
   howItWorks: {
@@ -26,7 +26,7 @@ export const landingData = {
     steps: [
       { step: "1", title: "Escolha o plano" },
       { step: "2", title: "Crie sua conta" },
-      { step: "3", title: "Responda o onboarding com IA" },
+      { step: "3", title: "Responda o onboarding guiado" },
       { step: "4", title: "Revise o preview gerado" },
       { step: "5", title: "Aprove a publicação" },
       { step: "6", title: "Copie o link publicado" }
@@ -35,10 +35,10 @@ export const landingData = {
   blocks: [
     {
       title: "Você responde o onboarding",
-      description: "A IA coleta contexto, ofertas, público e objetivo do seu negócio."
+      description: "A plataforma coleta contexto, ofertas, público e objetivo do seu negócio."
     },
     {
-      title: "A IA estrutura sua SmartBio",
+      title: "A SmartBio estrutura tudo para você",
       description: "Montagem automática com copy persuasivo, módulos e fluxo."
     },
     {
@@ -52,11 +52,11 @@ export const landingData = {
   ],
   demo: {
     title: "Veja uma SmartBio sendo criada de verdade",
-    description: "O cliente aprova. A SmartBio publica. O link fica pronto para copiar. Tudo gerado automaticamente pela nossa IA baseada no seu onboarding."
+    description: "O cliente aprova. A SmartBio publica. O link fica pronto para copiar. Tudo gerado automaticamente com base no seu onboarding."
   },
   onboarding: {
     title: "Captura, estrutura e gera. Em minutos.",
-    description: "A IA sugere estrutura, copy, perguntas e CTAs. A SmartBio organiza tudo em dados, ofertas e regras revisáveis antes da publicação.",
+    description: "A plataforma sugere estrutura, copy, perguntas e CTAs. A SmartBio organiza tudo em dados, ofertas e regras revisáveis antes da publicação.",
     question: "Qual é o principal objetivo da sua SmartBio?",
     options: [
       "Vender uma oferta",
@@ -85,7 +85,7 @@ export const landingData = {
       description: "Para negócios em crescimento",
       priceLabel: "[PRICE_INTELLIGENT]",
       currency: "R$",
-      features: ["Tudo do Essencial", "Onboarding assistido por IA", "Quiz de diagnóstico", "Recomendação por regras", "Preview antes da publicação", "Leads qualificados"]
+      features: ["Tudo do Essencial", "Onboarding guiado", "Quiz de diagnóstico", "Recomendação por regras", "Preview antes da publicação", "Leads qualificados"]
     },
     {
       id: "plan_premium",
@@ -109,11 +109,11 @@ export const landingData = {
       },
       {
         question: "Preciso saber programar?",
-        answer: "Não. Você apenas responde ao onboarding guiado por IA, aprova o resultado e copia o link final."
+        answer: "Não. Você responde ao onboarding guiado, aprova o resultado e copia o link final."
       },
       {
-        question: "A IA decide tudo sozinha?",
-        answer: "A IA sugere a estrutura, textos e regras para acelerar o processo, mas tudo é 100% revisável por você antes da aprovação e publicação."
+        question: "A plataforma decide tudo sozinha?",
+        answer: "A plataforma sugere estrutura, textos e regras para acelerar o processo, mas tudo é 100% revisável por você antes da aprovação e publicação."
       },
       {
         question: "Posso revisar antes de publicar?",
@@ -165,7 +165,7 @@ export const mockPlans: Plan[] = [
     description: 'Para negócios em crescimento',
     priceLabel: '[PRICE_INTELLIGENT]',
     currency: 'BRL',
-    features: ['Tudo do Essencial', 'Onboarding assistido por IA', 'Quiz de diagnóstico', 'Recomendação por regras', 'Preview antes da publicação', 'Leads qualificados'],
+    features: ['Tudo do Essencial', 'Onboarding guiado', 'Quiz de diagnóstico', 'Recomendação por regras', 'Preview antes da publicação', 'Leads qualificados'],
     stripePriceId: 'price_intelligent_test',
   },
   {
@@ -217,7 +217,7 @@ export const dashboardData = {
     },
     signup: {
       title: "Crie sua conta",
-      subtitle: "Comece o onboarding e gere sua primeira SmartBio com IA.",
+      subtitle: "Comece o onboarding e gere sua primeira SmartBio em minutos.",
       nameLabel: "Nome",
       emailLabel: "E-mail",
       passwordLabel: "Senha",
@@ -242,13 +242,13 @@ export const dashboardData = {
       subtitle: "Continue o fluxo para gerar, aprovar e publicar sua SmartBio.",
       actions: {
         continueOnboarding: "Continuar onboarding",
-        generating: "Gerando com IA...",
+        generating: "Gerando sua SmartBio...",
         viewPreview: "Ver preview completo",
         copyLink: "Copiar link publicado",
       },
       badges: {
         onboarding_pending: "Onboarding pendente",
-        generating: "Gerando com IA",
+        generating: "Gerando...",
         preview_pending_approval: "Preview aguardando aprovação",
         published: "Publicada",
       }
@@ -293,7 +293,7 @@ export const mockDashboardMetrics = {
 export const mockCreationFlowSteps = [
   { step: 1, title: 'Plano contratado', status: 'complete' },
   { step: 2, title: 'Conta criada', status: 'complete' },
-  { step: 3, title: 'Onboarding IA', status: 'complete' },
+  { step: 3, title: 'Onboarding Guiado', status: 'complete' },
   { step: 4, title: 'Ofertas estruturadas', status: 'complete' },
   { step: 5, title: 'Quiz configurado', status: 'complete' },
   { step: 6, title: 'Preview gerado', status: 'current' },
@@ -381,7 +381,7 @@ export const mockOnboardingSteps = [
   {
     id: 'step_objective',
     title: 'Objetivo',
-    description: 'O que você quer que aconteça quando alguém acessa sua SmartBio? Escolha uma sugestão ou descreva com suas palavras — a IA vai usar isso para gerar a estrutura certa.',
+    description: 'O que você quer que aconteça quando alguém acessa sua SmartBio? Escolha uma sugestão ou descreva com suas palavras — usamos isso para gerar a estrutura certa.',
     type: 'objective'
   },
   {

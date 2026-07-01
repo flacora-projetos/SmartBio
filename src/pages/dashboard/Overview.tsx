@@ -61,7 +61,7 @@ export function Overview() {
     const readiness = workspace?.readiness;
     return [
       { step: 1, title: 'Conta criada', status: 'complete' },
-      { step: 2, title: 'Onboarding IA', status: readiness?.hasIdentity ? 'complete' : 'current' },
+      { step: 2, title: 'Onboarding Guiado', status: readiness?.hasIdentity ? 'complete' : 'current' },
       { step: 3, title: 'Ofertas estruturadas', status: readiness?.hasOffers ? 'complete' : readiness?.hasIdentity ? 'current' : 'pending' },
       { step: 4, title: 'Quiz configurado', status: readiness?.hasQuiz ? 'complete' : readiness?.hasOffers ? 'current' : 'pending' },
       { step: 5, title: 'Regras de recomendacao', status: readiness?.hasRules ? 'complete' : readiness?.hasQuiz ? 'current' : 'pending' },

@@ -15,8 +15,8 @@ export function AiOnboardingSection() {
               </div>
               
               <div className="mb-6">
-                <h3 className="font-heading font-bold text-xl text-ink mb-2">Interface do Concierge IA</h3>
-                <p className="text-sm text-muted-foreground">Respondendo ao onboarding gerador</p>
+                <h3 className="font-heading font-bold text-xl text-ink mb-2">Interface do Onboarding SmartBio</h3>
+                <p className="text-sm text-muted-foreground">Onboarding guiado em andamento</p>
               </div>
 
               <div className="bg-surface rounded-2xl p-6 border border-border mb-6">
@@ -32,7 +32,7 @@ export function AiOnboardingSection() {
               </div>
 
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">A IA sugere automaticamente:</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">A plataforma estrutura automaticamente:</p>
                 <div className="flex flex-wrap gap-2">
                   {landingData.onboarding.aiSuggestions.map((sug, i) => (
                     <span key={i} className="px-3 py-1 bg-surface border border-border rounded-full text-xs font-medium text-ink">

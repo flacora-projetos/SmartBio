@@ -34,8 +34,8 @@ export function LandingHero() {
               <Sparkles className="w-5 h-5 text-primary" />
             </div>
             <div className="text-left">
-              <p className="font-bold text-ink">IA Avançada</p>
-              <p className="text-xs text-muted-foreground">Configuração em minutos</p>
+              <p className="font-bold text-ink">Configuração Guiada</p>
+              <p className="text-xs text-muted-foreground">Pronta em minutos</p>
             </div>
           </div>
           <div className="bg-surface px-6 py-4 rounded-2xl border border-border flex items-center gap-4 shadow-sm">

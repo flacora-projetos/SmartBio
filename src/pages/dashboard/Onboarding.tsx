@@ -154,7 +154,7 @@ export function Onboarding() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-ink">Bio curta</label>
-              <textarea className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px]" value={answers.shortBio} onChange={(event) => updateAnswer('shortBio', event.target.value)} placeholder="Descreva em uma frase o que voce faz. A IA vai melhorar depois." />
+              <textarea className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 min-h-[100px]" value={answers.shortBio} onChange={(event) => updateAnswer('shortBio', event.target.value)} placeholder="Ex: ajudo empreendedores a venderem mais com clareza e posicionamento" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-ink">Nicho ou posicionamento</label>
@@ -352,8 +352,8 @@ export function Onboarding() {
     <DashboardLayout>
       <div className="flex flex-col h-[calc(100vh-8rem)]">
         <div className="mb-8 shrink-0">
-          <h1 className="text-3xl font-heading font-bold text-ink">Onboarding IA</h1>
-          <p className="text-muted-foreground mt-2">Guie a criacao automatica da sua SmartBio.</p>
+          <h1 className="text-3xl font-heading font-bold text-ink">Onboarding Guiado</h1>
+          <p className="text-muted-foreground mt-2">Responda as perguntas e a SmartBio monta tudo para você.</p>
         </div>
 
         <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">

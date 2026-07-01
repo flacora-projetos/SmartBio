@@ -9,7 +9,7 @@ export function RecommendationLogicExplainer() {
       </div>
       
       <p className="text-sm text-muted-foreground mb-6">
-        As regras são revisáveis. A IA pode sugerir, mas a decisão precisa ser explicável. 
+        As regras são revisáveis e a decisão final é sempre sua.
         A SmartBio cruza as respostas do visitante com as regras configuradas para recomendar a melhor oferta.
       </p>
 

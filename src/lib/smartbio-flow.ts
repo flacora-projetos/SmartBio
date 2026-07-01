@@ -311,7 +311,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         tenant_id: tenant.id,
         smartbio_id: smartbio.id,
         name: 'Recomendacao inicial',
-        description: 'Regra inicial para validar o funil antes da IA definitiva.',
+        description: 'Regra inicial gerada automaticamente para validar o funil.',
         condition: { answer_contains: options[0] },
         recommended_offer_id: offerId,
         recommendation_reason: `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,

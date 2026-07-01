@@ -25,8 +25,8 @@ export function SmartBioCreationDemo() {
               <div className="flex gap-4">
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold shrink-0">2</div>
                 <div>
-                  <h4 className="font-bold text-ink text-lg">IA monta a estrutura</h4>
-                  <p className="text-muted-foreground">A plataforma cria módulos e textos.</p>
+                  <h4 className="font-bold text-ink text-lg">A SmartBio monta a estrutura</h4>
+                  <p className="text-muted-foreground">A plataforma cria módulos e textos automaticamente.</p>
                 </div>
               </div>
               <div className="flex gap-4">
