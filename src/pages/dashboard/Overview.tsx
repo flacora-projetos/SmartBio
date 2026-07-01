@@ -229,18 +229,38 @@ export function Overview() {
 
             {/* Preview Card */}
             <div className="bg-surface border border-border p-6 rounded-2xl shadow-sm">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-bold text-ink uppercase tracking-wider">{dashboardData.overview.previewCard.title}</h2>
+                {status === 'onboarding_pending' && (
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                    Exemplo
+                  </span>
+                )}
               </div>
-              <p className="text-xs text-muted-foreground mb-4">{dashboardData.overview.previewCard.subtitle}</p>
-              
-              <div className="relative mx-auto" style={{ maxWidth: '280px' }}>
-                 <div className="transform scale-[0.8] origin-top">
-                    <SmartBioPreviewMock data={workspace?.previewData} />
-                 </div>
-              </div>
-              
-              <div className="mt-[-80px] space-y-2 relative z-10 flex flex-col">
+              <p className="text-xs text-muted-foreground mb-4">
+                {status === 'onboarding_pending'
+                  ? 'Conclua o onboarding para ver seu preview real aqui.'
+                  : dashboardData.overview.previewCard.subtitle}
+              </p>
+
+              {isLoading ? (
+                <div className="h-[300px] bg-muted/40 rounded-2xl animate-pulse" />
+              ) : (
+                <div className="relative mx-auto overflow-hidden rounded-2xl" style={{ maxWidth: '240px', height: '300px' }}>
+                  <div className="transform scale-[0.65] origin-top-left" style={{ width: '300px' }}>
+                    <SmartBioPreviewMock data={workspace?.previewData ?? null} />
+                  </div>
+                  {status === 'onboarding_pending' && (
+                    <div className="absolute inset-0 bg-background/60 rounded-2xl flex items-end justify-center pb-6 pointer-events-none">
+                      <p className="text-xs font-medium text-muted-foreground text-center px-4">
+                        Este é um exemplo de como sua SmartBio vai ficar
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-4 space-y-2 flex flex-col">
                 {workspace?.readiness.canApprove ? (
                   <Link to="/app/preview" className={cn(buttonVariants({ variant: "default" }), "w-full bg-primary text-primary-foreground rounded-xl")}>
                     <Eye className="w-4 h-4 mr-2" /> {dashboardData.overview.previewCard.viewFull}
