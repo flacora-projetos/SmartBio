@@ -56,6 +56,7 @@ export type OnboardingDraftAnswers = {
   conversionMessage: string;
   theme: 'light' | 'dark';
   accentColor: string;
+  avatarUrl?: string;
 };
 
 function toAppStatus(status: WorkspaceSmartBio['status']): SmartBioStatus {
@@ -347,6 +348,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         diagnosticTitle: answers.diagnosticTitle,
         conversionDestination: answers.conversionDestination,
         buttonText: answers.buttonText,
+        avatarUrl: answers.avatarUrl || null,
       },
       theme_config: {
         theme: answers.theme,

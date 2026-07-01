@@ -59,8 +59,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     loadSession();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      // TOKEN_REFRESHED é silencioso (renovação de token em background).
+      // Ignorar para não desmontar páginas e resetar estado de formulários.
+      if (event === 'TOKEN_REFRESHED') return;
       setIsLoading(true);
       loadTenant(nextSession?.user ?? null).finally(() => setIsLoading(false));
     });

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { OnboardingStepper } from '@/components/onboarding/OnboardingStepper';
 import { AiSuggestionsPanel } from '@/components/onboarding/AiSuggestionsPanel';
@@ -8,6 +8,7 @@ import { SmartBioPreviewMock } from '@/components/dashboard/SmartBioPreviewMock'
 import { mockAiSuggestions, mockOnboardingSteps } from '@/data/mock';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
 import { generateInitialPreview, type OnboardingDraftAnswers } from '@/lib/smartbio-flow';
 
 const initialAnswers: OnboardingDraftAnswers = {
@@ -34,8 +35,11 @@ export function Onboarding() {
   const [answers, setAnswers] = useState<OnboardingDraftAnswers>(initialAnswers);
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState('');
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
-  const { tenant } = useAuth();
+  const { tenant, user } = useAuth();
   const step = mockOnboardingSteps[currentStep];
 
   const updateAnswer = <Key extends keyof OnboardingDraftAnswers>(key: Key, value: OnboardingDraftAnswers[Key]) => {
@@ -79,16 +83,70 @@ export function Onboarding() {
     updateAnswer('diagnosticOptions', nextOptions);
   };
 
+  const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    const localUrl = URL.createObjectURL(file);
+    setAvatarPreview(localUrl);
+    setIsUploadingAvatar(true);
+
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${user.id}/avatar.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(path, file, { upsert: true, contentType: file.type });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      const publicUrl = urlData.publicUrl;
+
+      updateAnswer('avatarUrl', publicUrl);
+      await supabase.auth.updateUser({ data: { avatar_url: publicUrl } });
+    } catch (err) {
+      console.error('Erro ao fazer upload da foto:', err);
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
   const renderStepContent = () => {
     switch (step.type) {
       case 'identity':
         return (
           <div className="space-y-6">
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-surface border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors">
-                <Upload className="w-6 h-6 mb-1" />
-                <span className="text-[10px]">Foto</span>
-              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploadingAvatar}
+                className="w-20 h-20 rounded-full bg-surface border border-border flex flex-col items-center justify-center text-muted-foreground cursor-pointer hover:bg-muted/50 transition-colors shrink-0 overflow-hidden relative"
+              >
+                {avatarPreview ? (
+                  <>
+                    <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
+                    {isUploadingAvatar && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center rounded-full">
+                        <Loader2 className="w-5 h-5 text-white animate-spin" />
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {isUploadingAvatar ? <Loader2 className="w-6 h-6 animate-spin" /> : <Upload className="w-6 h-6 mb-1" />}
+                    {!isUploadingAvatar && <span className="text-[10px]">Foto</span>}
+                  </>
+                )}
+              </button>
               <div className="flex-1 space-y-2">
                 <label className="text-sm font-medium text-ink">Nome da marca ou profissional</label>
                 <input className="w-full px-4 py-2 rounded-xl border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/20" value={answers.brandName} onChange={(event) => updateAnswer('brandName', event.target.value)} placeholder="Ex: Ana Souza Consultoria" />

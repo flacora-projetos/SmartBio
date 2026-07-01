@@ -99,6 +99,7 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
   const { user, tenant, signOut } = useAuth();
   const [publishStatus, setPublishStatus] = useState<SmartBioPublishStatus>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
 
   const userName =
     (user?.user_metadata?.full_name as string | undefined) ||
@@ -278,11 +279,12 @@ export function DashboardLayout({ children }: { children: ReactNode }) {
               <p className="text-sm font-bold text-ink leading-none">{userName}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{userEmail}</p>
             </div>
-            {avatarUrl ? (
+            {avatarUrl && !avatarError ? (
               <img
                 src={avatarUrl}
                 alt={userName}
-                className="w-9 h-9 rounded-full bg-border object-cover"
+                className="w-9 h-9 rounded-full bg-border object-cover shrink-0"
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">
