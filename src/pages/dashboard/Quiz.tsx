@@ -1,17 +1,16 @@
 import { useState } from 'react';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, MessageSquare, Zap } from 'lucide-react';
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout';
 import { QuizSummaryCards } from '@/components/dashboard/QuizSummaryCards';
 import { QuestionList } from '@/components/dashboard/QuestionList';
 import { QuestionEditor } from '@/components/dashboard/QuestionEditor';
 import { RecommendationRulesPanel } from '@/components/dashboard/RecommendationRulesPanel';
-import { RecommendationPreview } from '@/components/dashboard/RecommendationPreview';
-import { RecommendationLogicExplainer } from '@/components/dashboard/RecommendationLogicExplainer';
 import { Button } from '@/components/ui/button';
 import { useQuiz } from '@/hooks/useQuiz';
 import { useAuth } from '@/contexts/AuthContext';
-import type { DbQuestion } from '@/lib/quiz';
-import type { DbRule } from '@/lib/quiz';
+import type { DbQuestion, DbRule } from '@/lib/quiz';
+
+type Tab = 'questions' | 'rules';
 
 export function Quiz() {
   const { tenant } = useAuth();
@@ -22,7 +21,7 @@ export function Quiz() {
     createR, updateR, removeR,
   } = useQuiz();
 
-  // null = editor empty | DbQuestion = editing existing | 'new' = creating
+  const [activeTab, setActiveTab] = useState<Tab>('questions');
   const [selectedQuestion, setSelectedQuestion] = useState<DbQuestion | null>(null);
   const [isNewQuestion, setIsNewQuestion] = useState(false);
 
@@ -49,10 +48,7 @@ export function Quiz() {
     setIsNewQuestion(false);
   };
 
-  const handleSaveRule = async (
-    payload: Omit<DbRule, 'id' | 'created_at'>,
-    existingId?: string
-  ) => {
+  const handleSaveRule = async (payload: Omit<DbRule, 'id' | 'created_at'>, existingId?: string) => {
     if (existingId) {
       await updateR(existingId, payload);
     } else {
@@ -61,56 +57,117 @@ export function Quiz() {
   };
 
   const editorQuestion = isNewQuestion ? null : selectedQuestion;
+  const showEditor = isNewQuestion || selectedQuestion !== null;
+
+  const activeQuestions = questions.filter(q => q.status === 'active').length;
+  const activeRules = rules.filter(r => r.status === 'active').length;
 
   return (
     <DashboardLayout>
-      <div className="flex flex-col h-[calc(100vh-8rem)]">
-        <div className="flex-1 flex flex-col gap-6 overflow-y-auto hide-scrollbar pb-6">
+      <div className="flex flex-col gap-6 pb-8">
 
-          <div className="flex items-center justify-between shrink-0">
-            <div>
-              <h1 className="text-3xl font-heading font-bold text-ink">Quiz e recomendação</h1>
-              <p className="text-muted-foreground mt-2">
-                Configure perguntas e regras para conduzir o visitante ao próximo passo certo.
-              </p>
-            </div>
-            <Button onClick={openNew} className="rounded-xl bg-primary text-primary-foreground hidden sm:flex">
-              <Plus className="w-4 h-4 mr-2" /> Nova Pergunta
-            </Button>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-heading font-bold text-ink">Quiz e recomendação</h1>
+            <p className="text-muted-foreground mt-1">
+              Configure perguntas para qualificar visitantes e regras para recomendar a oferta certa.
+            </p>
           </div>
+        </div>
 
-          {isLoading ? (
-            <div className="flex-1 flex items-center justify-center py-24">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        {isLoading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl text-sm text-destructive">
+            {error}
+          </div>
+        ) : (
+          <>
+            <QuizSummaryCards questions={questions} rules={rules} />
+
+            {/* Tabs */}
+            <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
+              <button
+                type="button"
+                onClick={() => setActiveTab('questions')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === 'questions'
+                    ? 'bg-surface shadow-sm text-ink'
+                    : 'text-muted-foreground hover:text-ink'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                Perguntas
+                {activeQuestions > 0 && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'questions' ? 'bg-primary/10 text-primary' : 'bg-border text-muted-foreground'
+                  }`}>
+                    {activeQuestions}
+                  </span>
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('rules')}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                  activeTab === 'rules'
+                    ? 'bg-surface shadow-sm text-ink'
+                    : 'text-muted-foreground hover:text-ink'
+                }`}
+              >
+                <Zap className="w-4 h-4" />
+                Regras
+                {activeRules > 0 && (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                    activeTab === 'rules' ? 'bg-success/10 text-success' : 'bg-border text-muted-foreground'
+                  }`}>
+                    {activeRules}
+                  </span>
+                )}
+              </button>
             </div>
-          ) : error ? (
-            <div className="px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl text-sm text-destructive">
-              {error}
-            </div>
-          ) : (
-            <>
-              <QuizSummaryCards questions={questions} rules={rules} />
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[500px]">
+            {/* Aba: Perguntas */}
+            {activeTab === 'questions' && (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[480px]">
 
-                {/* Left: Question list */}
-                <div className="lg:col-span-4 flex flex-col gap-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                    Perguntas do Diagnóstico
-                  </h3>
+                {/* Coluna esquerda: lista */}
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                      Perguntas do diagnóstico
+                    </p>
+                    <Button onClick={openNew} size="sm" className="rounded-xl bg-primary text-primary-foreground text-xs h-8">
+                      <Plus className="w-3.5 h-3.5 mr-1.5" /> Nova pergunta
+                    </Button>
+                  </div>
+
                   <QuestionList
                     questions={questions}
                     selectedQuestionId={selectedQuestion?.id ?? null}
                     onSelectQuestion={q => { setSelectedQuestion(q); setIsNewQuestion(false); }}
                   />
-                  <Button onClick={openNew} variant="outline" className="w-full rounded-xl border-dashed">
-                    <Plus className="w-4 h-4 mr-2" /> Adicionar Pergunta
-                  </Button>
+
+                  {questions.length === 0 && !isNewQuestion && (
+                    <div
+                      className="flex flex-col items-center justify-center gap-3 py-12 border-2 border-dashed border-border rounded-2xl text-center cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={openNew}
+                    >
+                      <MessageSquare className="w-8 h-8 text-muted-foreground/40" />
+                      <div>
+                        <p className="text-sm font-semibold text-ink">Nenhuma pergunta ainda</p>
+                        <p className="text-xs text-muted-foreground mt-1">Clique para criar a primeira pergunta do diagnóstico</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Center: Question editor */}
-                <div className="lg:col-span-4 h-[500px] lg:h-auto">
-                  {tenant && (
+                {/* Coluna direita: editor */}
+                <div className="h-[480px] lg:h-auto">
+                  {showEditor && tenant ? (
                     <QuestionEditor
                       question={editorQuestion}
                       smartbioId={smartbioId}
@@ -118,30 +175,59 @@ export function Quiz() {
                       onSave={handleSaveQuestion}
                       onDelete={handleDeleteQuestion}
                     />
+                  ) : (
+                    <div
+                      className="h-full flex flex-col items-center justify-center gap-3 text-center border-2 border-dashed border-border rounded-2xl p-8 cursor-pointer hover:border-primary/40 transition-colors"
+                      onClick={openNew}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                        <Plus className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-ink">
+                          {questions.length > 0 ? 'Selecione uma pergunta para editar' : 'Crie a primeira pergunta'}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Perguntas qualificam o visitante para a recomendação certa
+                        </p>
+                      </div>
+                    </div>
                   )}
-                </div>
-
-                {/* Right: Rules & Preview */}
-                <div className="lg:col-span-4 flex flex-col gap-6">
-                  {tenant && (
-                    <RecommendationRulesPanel
-                      rules={rules}
-                      offers={offers}
-                      tenantId={tenant.id}
-                      smartbioId={smartbioId}
-                      onSave={handleSaveRule}
-                      onDelete={removeR}
-                    />
-                  )}
-                  <RecommendationPreview previewData={null} />
                 </div>
 
               </div>
+            )}
 
-              <RecommendationLogicExplainer />
-            </>
-          )}
-        </div>
+            {/* Aba: Regras */}
+            {activeTab === 'rules' && (
+              <div className="flex flex-col gap-4">
+                <div className="flex items-start gap-3 p-4 bg-success/5 border border-success/20 rounded-2xl">
+                  <Zap className="w-4 h-4 text-success mt-0.5 shrink-0" />
+                  <p className="text-sm text-ink leading-relaxed">
+                    <span className="font-semibold">Como funciona:</span> cada regra mapeia uma resposta do visitante para uma oferta recomendada. Se nenhuma regra casar, a primeira regra da lista é usada como padrão.
+                  </p>
+                </div>
+
+                {tenant && (
+                  <RecommendationRulesPanel
+                    rules={rules}
+                    offers={offers}
+                    tenantId={tenant.id}
+                    smartbioId={smartbioId}
+                    onSave={handleSaveRule}
+                    onDelete={removeR}
+                  />
+                )}
+
+                {offers.length === 0 && (
+                  <div className="p-4 bg-warning/5 border border-warning/20 rounded-2xl text-sm text-ink">
+                    <span className="font-semibold">Atenção:</span> cadastre pelo menos uma oferta na aba Ofertas antes de criar regras.
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </DashboardLayout>
   );

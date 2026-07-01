@@ -40,7 +40,7 @@ export function QuizSummaryCards({ questions, rules }: QuizSummaryCardsProps) {
       </div>
 
       <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
-        <div className="flex items-center gap-3 text-secondary-foreground mb-2">
+        <div className="flex items-center gap-3 text-primary mb-2">
           <Link className="w-5 h-5" />
           <h3 className="font-bold text-sm">Ofertas Conectadas</h3>
         </div>
