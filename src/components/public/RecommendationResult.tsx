@@ -1,6 +1,6 @@
 import { Sparkles, MessageSquare, Calendar, CheckSquare, ExternalLink, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { PublicOffer, PublicRule } from '@/lib/public-smartbio';
+import { offerCtaLabel, type PublicOffer, type PublicRule } from '@/lib/public-smartbio';
 
 interface RecommendationResultProps {
   offer: PublicOffer;
@@ -21,7 +21,7 @@ function CtaIcon({ type }: { type: string | null }) {
 export function RecommendationResult({ offer, rule, onCtaClick, onReset }: RecommendationResultProps) {
   const reason = rule?.recommendation_reason
     ?? `${offer.title} parece o melhor próximo passo para o seu momento atual.`;
-  const buttonText = rule?.final_cta ?? offer.recommended_cta ?? 'Quero esse';
+  const buttonText = rule?.final_cta ?? offerCtaLabel(offer);
 
   return (
     <div className="border-2 border-primary rounded-3xl overflow-hidden bg-surface shadow-2xl animate-in fade-in zoom-in-95 duration-500">

@@ -23,9 +23,9 @@ const initialAnswers: OnboardingDraftAnswers = {
   pain: '',
   offerTitle: '',
   offerDescription: '',
-  diagnosticTitle: 'Diagnóstico Inteligente',
-  diagnosticQuestion: 'Qual é o seu principal objetivo hoje?',
-  diagnosticOptions: ['Organizar meus processos', 'Aumentar minhas vendas', 'Ter acompanhamento direto'],
+  diagnosticTitle: 'Não sabe por onde começar?',
+  diagnosticQuestion: 'O que você está procurando hoje?',
+  diagnosticOptions: ['Quero comprar agora', 'Preciso de ajuda para escolher', 'Quero agendar um horário'],
   diagnosticQuestion2: '',
   diagnosticOptions2: ['', '', ''],
   diagnosticQuestion3: '',
@@ -483,7 +483,7 @@ export function Onboarding() {
                 className={inputClass}
                 value={answers.brandName}
                 onChange={(event) => updateAnswer('brandName', event.target.value)}
-                placeholder="Ex: Ana Souza Consultoria"
+                placeholder="Ex: Studio Bella"
                 autoFocus
               />
             </Field>

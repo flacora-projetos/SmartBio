@@ -183,6 +183,21 @@ export function findMatchingRule(rules: PublicRule[], answers: string[]): Public
   return rules[0] ?? null;
 }
 
+// recommended_cta guarda o TIPO de destino (whatsapp/agenda/...) definido no
+// onboarding — não é texto de botão. Traduz para um rótulo amigável.
+const CTA_TYPE_LABELS: Record<string, string> = {
+  whatsapp: 'Falar no WhatsApp',
+  agenda: 'Agendar agora',
+  formulario: 'Quero saber mais',
+  checkout: 'Comprar agora',
+};
+
+export function offerCtaLabel(offer: PublicOffer): string {
+  const raw = offer.recommended_cta?.trim();
+  if (!raw) return 'Saiba mais';
+  return CTA_TYPE_LABELS[raw.toLowerCase()] ?? raw;
+}
+
 export function buildCtaUrl(ctaType: string | null, destination: string | null, ctaUrl?: string | null): string {
   const target = ctaUrl || destination;
   if (!target) return '#';

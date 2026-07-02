@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Sparkles, ArrowRight, Loader2, Phone, Globe, Youtube,
@@ -14,6 +14,7 @@ import {
   fetchPublicSmartBio,
   findMatchingRule,
   buildCtaUrl,
+  offerCtaLabel,
   buildWhatsAppUrl,
   trackEvent,
   insertLead,
@@ -25,6 +26,7 @@ import {
 
 type PageState  = 'loading' | 'not_found' | 'paused' | 'ready';
 type QuizState  = 'idle' | 'in_progress' | 'completed';
+type QuizOrigin = 'hero' | 'floating_cta' | 'offers_hint';
 
 // ── Asset card helpers ───────────────────────────────────────────────────────
 
@@ -98,7 +100,7 @@ function OfferCard({ offer, onCtaClick }: { offer: PublicOffer; onCtaClick: (off
           size="sm"
           className="w-full bg-primary text-primary-foreground rounded-xl font-bold text-xs h-9 hover:scale-[1.01] transition-transform mt-auto"
         >
-          {offer.recommended_cta ?? 'Saiba mais'}
+          {offerCtaLabel(offer)}
         </Button>
       </div>
     </div>
@@ -120,6 +122,10 @@ export function SmartBioPage() {
   const [matchedOffer, setMatchedOffer] = useState<PublicOffer | null>(null);
   const [matchedRule, setMatchedRule]   = useState<PublicRule | null>(null);
   const [quizAnswers, setQuizAnswers]   = useState<string[]>([]);
+  // Barra flutuante do quiz: aparece quando o hero sai da tela sem resposta
+  const [heroVisible, setHeroVisible]   = useState(true);
+  const [quizBarDismissed, setQuizBarDismissed] = useState(false);
+  const quizHeroRef = useRef<HTMLElement>(null);
 
   // Em preview, pixels de tracking não são carregados
   const { fireEvent } = useTrackingTags(isPreview ? {} : (pageData?.smartbio.tracking_config ?? {}));
@@ -146,11 +152,28 @@ export function SmartBioPage() {
     }
   }, [pageState, pageData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleStartQuiz = () => {
+  // Observa o hero do quiz: quando ele sai da tela sem resposta, a barra
+  // flutuante reapresenta a promessa no momento em que o visitante está
+  // comparando as ofertas.
+  useEffect(() => {
+    const el = quizHeroRef.current;
+    if (!el || pageState !== 'ready') return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setHeroVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [pageState, quizState]);
+
+  const handleStartQuiz = (origin: QuizOrigin = 'hero') => {
     if (!pageData) return;
     setQuizState('in_progress');
+    if (origin !== 'hero') {
+      quizHeroRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
     if (!isPreview) {
-      trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', {});
+      trackEvent(pageData.smartbio.tenant_id, pageData.smartbio.id, 'quiz_start', { origin });
       fireEvent('quiz_start');
     }
   };
@@ -204,7 +227,7 @@ export function SmartBioPage() {
 
   const diagnosticTitle =
     (pageData?.smartbio.public_config?.diagnosticTitle as string | undefined)
-    ?? 'Descubra o próximo passo ideal';
+    ?? 'Não sabe por onde começar?';
 
   // ── Loading ──────────────────────────────────────────────────────────────
   if (pageState === 'loading') {
@@ -271,7 +294,7 @@ export function SmartBioPage() {
 
       {/* Quiz section */}
       {hasQuiz && (
-        <section>
+        <section ref={quizHeroRef}>
           {quizState === 'idle' && (
             <div className="bg-primary/5 border border-primary/20 rounded-3xl p-6 text-center animate-in fade-in duration-300">
               <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-4">
@@ -279,13 +302,14 @@ export function SmartBioPage() {
               </div>
               <h2 className="text-lg font-bold font-heading text-ink mb-2">{diagnosticTitle}</h2>
               <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
-                Responda algumas perguntas rápidas e receba uma recomendação personalizada.
+                Responda {pageData.questions.length === 1 ? '1 pergunta rápida' : `${pageData.questions.length} perguntas rápidas`} — leva
+                menos de 1 minuto — e veja a opção certa para o seu caso.
               </p>
               <Button
-                onClick={handleStartQuiz}
+                onClick={() => handleStartQuiz('hero')}
                 className="bg-primary text-primary-foreground rounded-xl px-8 h-12 font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-transform"
               >
-                Iniciar diagnóstico <ArrowRight className="w-4 h-4 ml-2" />
+                Quero minha recomendação <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           )}
@@ -312,9 +336,19 @@ export function SmartBioPage() {
       {/* Ofertas */}
       {hasOffers && (
         <section>
-          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3 px-1">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-1 px-1">
             {quizState === 'completed' ? 'Veja todas as opções' : 'O que posso fazer por você'}
           </h3>
+          {hasQuiz && quizState === 'idle' && (
+            <button
+              type="button"
+              onClick={() => handleStartQuiz('offers_hint')}
+              className="block text-xs text-primary font-medium hover:underline mb-3 px-1 text-left"
+            >
+              Em dúvida? Responda o quiz e receba uma indicação →
+            </button>
+          )}
+          {!(hasQuiz && quizState === 'idle') && <div className="mb-2" />}
           <div className={`grid gap-4 ${pageData.offers.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'}`}>
             {pageData.offers.map(offer => (
               <OfferCard
@@ -399,6 +433,30 @@ export function SmartBioPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Barra flutuante do quiz: resgata quem rolou sem responder ── */}
+      {hasQuiz && quizState === 'idle' && !heroVisible && !quizBarDismissed && (
+        <div className="fixed bottom-4 inset-x-0 z-40 flex justify-center px-4 animate-in slide-in-from-bottom-4 fade-in duration-300 pointer-events-none">
+          <div className="pointer-events-auto flex items-center gap-2 bg-ink text-background rounded-full shadow-2xl pl-4 pr-2 py-2 max-w-full">
+            <Sparkles className="w-4 h-4 shrink-0 opacity-80" />
+            <button
+              type="button"
+              onClick={() => handleStartQuiz('floating_cta')}
+              className="text-sm font-bold whitespace-nowrap truncate"
+            >
+              Em dúvida? Deixa que eu te indico
+            </button>
+            <button
+              type="button"
+              onClick={() => setQuizBarDismissed(true)}
+              aria-label="Dispensar"
+              className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center shrink-0 transition-colors"
+            >
+              <span className="text-sm leading-none">×</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

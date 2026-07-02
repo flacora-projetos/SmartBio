@@ -269,7 +269,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
   const shortBio = ai.shortBio || clean(answers.shortBio, createGeneratedBio(tenant, answers));
   const offerTitle = clean(answers.offerTitle, 'Oferta principal');
   const offerDescription = clean(answers.offerDescription, 'Oferta inicial gerada a partir do onboarding. Deve ser revisada antes de publicar.');
-  const diagnosticQuestion = ai.diagnosticQuestion || clean(answers.diagnosticQuestion, 'Qual resultado voce busca agora?');
+  const diagnosticQuestion = ai.diagnosticQuestion || clean(answers.diagnosticQuestion, 'O que você está procurando hoje?');
   const rawOptions = ai.diagnosticOptions ?? answers.diagnosticOptions;
   const diagnosticOptions = rawOptions
     .map((option) => option.trim())
@@ -277,7 +277,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
     .slice(0, 5);
   const options = diagnosticOptions.length > 0
     ? diagnosticOptions
-    : ['Entender melhor a solucao', 'Falar com a equipe', 'Comparar opcoes antes de decidir'];
+    : ['Quero comprar agora', 'Preciso de ajuda para escolher', 'Quero agendar um horário'];
   const aiDiagnosticTitle = ai.diagnosticTitle || answers.diagnosticTitle;
 
   await saveOnboardingAnswers(tenant.id, smartbio.id, answers);
@@ -459,7 +459,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         condition: { answer_contains: options[0] },
         recommended_offer_id: offerId,
         recommendation_reason: ai.recommendationReason || `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
-        final_cta: clean(answers.buttonText, 'Falar com a equipe'),
+        final_cta: clean(answers.buttonText, 'Falar no WhatsApp'),
         status: 'active',
       });
 
@@ -471,7 +471,7 @@ export async function generateInitialPreview(tenant: AppTenant, answers: Onboard
         condition: { answer_contains: options[0] },
         recommended_offer_id: offerId,
         recommendation_reason: ai.recommendationReason || `Pelo que voce respondeu, ${offerTitle} parece o melhor proximo passo.`,
-        final_cta: clean(answers.buttonText, 'Falar com a equipe'),
+        final_cta: clean(answers.buttonText, 'Falar no WhatsApp'),
         status: 'active',
       })
       .eq('tenant_id', tenant.id)
